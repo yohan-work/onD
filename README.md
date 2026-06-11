@@ -11,6 +11,9 @@ keeping model inference on the local machine.
 ## Features
 
 - Load and select locally installed Ollama models
+- Switch between single-model chat and multi-model comparison
+- Send one prompt to 2-4 models in parallel
+- Compare independent streaming responses and response times
 - Stream chat responses in real time
 - Preserve conversation history within the current session
 - Configure temperature, top-p, and context length
@@ -43,6 +46,17 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000), select a model, and enter
 a message. Press Enter to send or Shift+Enter to insert a new line.
+
+## Compare Mode
+
+Select `Compare` in the header, then choose 2 to 4 installed models from the
+sidebar. A prompt is sent to every selected model at the same time and each
+response streams into its own card.
+
+All models use the same temperature, top-p, context length, and system prompt
+so their output can be compared under consistent conditions. On later turns,
+each model receives the user conversation plus only its own completed previous
+responses. A failed model can be retried without rerunning successful models.
 
 ## Environment Variables
 
@@ -128,15 +142,16 @@ ollama pull gemma4:e4b
 Context limits vary by model. Select a lower context length or adjust the
 generation controls, then retry the request.
 
-## MVP Scope
+## Current Scope
 
-This first release intentionally excludes accounts, databases, cloud
-deployment, RAG, file uploads, multimodal input, long-term memory, Markdown
-rendering, and agents.
+This release supports independent parallel model responses. It intentionally
+excludes model-to-model debate, a final synthesizer model, accounts, databases,
+cloud deployment, RAG, file uploads, multimodal input, long-term memory, and
+Markdown rendering.
 
 ## Roadmap
 
-- Multi-model comparison with response timing
+- Model debate and final synthesis workflows
 - Prompt template management
 - Saved and searchable chat sessions
 - Markdown rendering and code highlighting

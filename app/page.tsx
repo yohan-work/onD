@@ -3,24 +3,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ChatWindow } from "@/components/ChatWindow";
+import { CompareWindow } from "@/components/CompareWindow";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
+import { streamChat } from "@/lib/chat-stream";
 import { DEFAULT_MODEL, DEFAULT_SETTINGS } from "@/lib/constants";
 import { loadSettings, saveSettings } from "@/lib/storage";
 import type {
   ChatMessage,
+  ChatMode,
   ChatSettings,
+  CompareTurn,
   ConnectionStatus,
   ModelInfo,
   ModelListResponse,
+  ModelResponse,
 } from "@/lib/types";
-
-type StreamChunk = {
-  message?: {
-    content?: unknown;
-  };
-  error?: unknown;
-};
 
 async function readErrorMessage(response: Response) {
   try {
@@ -52,17 +50,94 @@ function chooseModel(models: ModelInfo[], preferredModel: string) {
   return models[0]?.name ?? "";
 }
 
+function chooseCompareModels(
+  models: ModelInfo[],
+  preferredModels: string[],
+) {
+  const availableNames = models.map((model) => model.name);
+  const selected = preferredModels
+    .filter((model, index) => {
+      return availableNames.includes(model) && preferredModels.indexOf(model) === index;
+    })
+    .slice(0, 4);
+
+  for (const model of availableNames) {
+    if (selected.length >= 2) {
+      break;
+    }
+    if (!selected.includes(model)) {
+      selected.push(model);
+    }
+  }
+
+  return selected;
+}
+
+function buildCompareMessages(
+  turns: CompareTurn[],
+  turnId: string,
+  model: string,
+  systemPrompt: string,
+) {
+  const messages: ChatMessage[] = [];
+  if (systemPrompt.trim()) {
+    messages.push({ role: "system", content: systemPrompt.trim() });
+  }
+
+  for (const turn of turns) {
+    messages.push({ role: "user", content: turn.prompt });
+
+    if (turn.id === turnId) {
+      break;
+    }
+
+    const previousResponse = turn.responses.find(
+      (response) => response.model === model,
+    );
+    if (
+      previousResponse?.status === "completed" &&
+      previousResponse.content
+    ) {
+      messages.push({
+        role: "assistant",
+        content: previousResponse.content,
+      });
+    }
+  }
+
+  return messages;
+}
+
+function createTurn(prompt: string, models: string[]): CompareTurn {
+  return {
+    id: crypto.randomUUID(),
+    prompt,
+    responses: models.map((model) => ({
+      model,
+      content: "",
+      status: "queued",
+      responseTime: null,
+      error: null,
+    })),
+  };
+}
+
 export default function Home() {
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [singleMessages, setSingleMessages] = useState<ChatMessage[]>([]);
+  const [compareTurns, setCompareTurns] = useState<CompareTurn[]>([]);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isSingleLoading, setIsSingleLoading] = useState(false);
+  const [isCompareLoading, setIsCompareLoading] = useState(false);
+  const [singleError, setSingleError] = useState<string | null>(null);
+  const [compareError, setCompareError] = useState<string | null>(null);
   const [lastResponseTime, setLastResponseTime] = useState<number | null>(null);
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>("checking");
   const hasHydratedRef = useRef(false);
+
+  const isLoading = isSingleLoading || isCompareLoading;
 
   useEffect(() => {
     let isActive = true;
@@ -96,8 +171,12 @@ export default function Home() {
         setConnectionStatus("connected");
 
         if (payload.models.length === 0) {
-          setSettings((current) => ({ ...current, model: "" }));
-          setError(
+          setSettings((current) => ({
+            ...current,
+            model: "",
+            compareModels: [],
+          }));
+          setSingleError(
             "No Ollama models found. Please run `ollama pull gemma4:e4b` first.",
           );
           return;
@@ -106,18 +185,23 @@ export default function Home() {
         setSettings((current) => ({
           ...current,
           model: chooseModel(payload.models, storedSettings.model),
+          compareModels: chooseCompareModels(
+            payload.models,
+            storedSettings.compareModels,
+          ),
         }));
       } catch (loadError) {
         if (!isActive) {
           return;
         }
 
-        setConnectionStatus("disconnected");
-        setError(
+        const message =
           loadError instanceof Error
             ? loadError.message
-            : "Ollama server is not running. Please start Ollama and try again.",
-        );
+            : "Ollama server is not running. Please start Ollama and try again.";
+        setConnectionStatus("disconnected");
+        setSingleError(message);
+        setCompareError(message);
       }
     }
 
@@ -144,14 +228,89 @@ export default function Home() {
     [],
   );
 
-  const handleSubmit = useCallback(async () => {
+  const updateCompareResponse = useCallback(
+    (
+      turnId: string,
+      model: string,
+      updater: (response: ModelResponse) => ModelResponse,
+    ) => {
+      setCompareTurns((current) =>
+        current.map((turn) =>
+          turn.id === turnId
+            ? {
+                ...turn,
+                responses: turn.responses.map((response) =>
+                  response.model === model ? updater(response) : response,
+                ),
+              }
+            : turn,
+        ),
+      );
+    },
+    [],
+  );
+
+  const runCompareModel = useCallback(
+    async (
+      turnId: string,
+      model: string,
+      turns: CompareTurn[],
+      activeSettings: ChatSettings,
+    ) => {
+      updateCompareResponse(turnId, model, (response) => ({
+        ...response,
+        content: "",
+        status: "streaming",
+        responseTime: null,
+        error: null,
+      }));
+
+      try {
+        const responseTime = await streamChat({
+          model,
+          messages: buildCompareMessages(
+            turns,
+            turnId,
+            model,
+            activeSettings.systemPrompt,
+          ),
+          settings: activeSettings,
+          onContent: (content) => {
+            updateCompareResponse(turnId, model, (response) => ({
+              ...response,
+              content: response.content + content,
+            }));
+          },
+        });
+
+        updateCompareResponse(turnId, model, (response) => ({
+          ...response,
+          status: "completed",
+          responseTime,
+        }));
+        setConnectionStatus("connected");
+      } catch (requestError) {
+        updateCompareResponse(turnId, model, (response) => ({
+          ...response,
+          status: "error",
+          error:
+            requestError instanceof Error
+              ? requestError.message
+              : "This model failed to respond. Please try again.",
+        }));
+      }
+    },
+    [updateCompareResponse],
+  );
+
+  const handleSingleSubmit = useCallback(async () => {
     const content = input.trim();
     if (!content || isLoading || !settings.model) {
       return;
     }
 
     const userMessage: ChatMessage = { role: "user", content };
-    const conversation = [...messages, userMessage];
+    const conversation = [...singleMessages, userMessage];
     const requestMessages: ChatMessage[] = settings.systemPrompt.trim()
       ? [
           { role: "system", content: settings.systemPrompt.trim() },
@@ -161,123 +320,131 @@ export default function Home() {
     const assistantIndex = conversation.length;
 
     setInput("");
-    setError(null);
+    setSingleError(null);
     setLastResponseTime(null);
-    setIsLoading(true);
-    setMessages([...conversation, { role: "assistant", content: "" }]);
-
-    const start = performance.now();
+    setIsSingleLoading(true);
+    setSingleMessages([
+      ...conversation,
+      { role: "assistant", content: "" },
+    ]);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const responseTime = await streamChat({
+        model: settings.model,
+        messages: requestMessages,
+        settings,
+        onContent: (nextContent) => {
+          setSingleMessages((current) =>
+            current.map((message, index) =>
+              index === assistantIndex
+                ? { ...message, content: message.content + nextContent }
+                : message,
+            ),
+          );
         },
-        body: JSON.stringify({
-          model: settings.model,
-          messages: requestMessages,
-          options: {
-            temperature: settings.temperature,
-            top_p: settings.top_p,
-            num_ctx: settings.num_ctx,
-          },
-        }),
       });
 
-      if (!response.ok) {
-        throw new Error(await readErrorMessage(response));
-      }
-
-      if (!response.body) {
-        throw new Error("Ollama returned an empty response stream.");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      const processLine = (line: string) => {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) {
-          return;
-        }
-
-        let chunk: StreamChunk;
-        try {
-          chunk = JSON.parse(trimmedLine) as StreamChunk;
-        } catch {
-          console.warn("Skipped malformed Ollama stream chunk.");
-          return;
-        }
-
-        if (typeof chunk.error === "string") {
-          throw new Error(chunk.error);
-        }
-
-        const nextContent = chunk.message?.content;
-        if (typeof nextContent !== "string" || nextContent.length === 0) {
-          return;
-        }
-
-        setMessages((current) =>
-          current.map((message, index) =>
-            index === assistantIndex
-              ? { ...message, content: message.content + nextContent }
-              : message,
-          ),
-        );
-      };
-
-      while (true) {
-        const { done, value } = await reader.read();
-        buffer += decoder.decode(value, { stream: !done });
-
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        lines.forEach(processLine);
-
-        if (done) {
-          break;
-        }
-      }
-
-      processLine(buffer);
-      setLastResponseTime(performance.now() - start);
+      setLastResponseTime(responseTime);
       setConnectionStatus("connected");
     } catch (chatError) {
-      setMessages((current) =>
+      setSingleMessages((current) =>
         current.filter(
           (message, index) =>
             index !== assistantIndex || message.content.length > 0,
         ),
       );
-      setError(
+      setSingleError(
         chatError instanceof Error
           ? chatError.message
           : "The selected model failed to respond. Please try again.",
       );
     } finally {
-      setIsLoading(false);
+      setIsSingleLoading(false);
     }
-  }, [input, isLoading, messages, settings]);
+  }, [input, isLoading, settings, singleMessages]);
 
-  const clearChat = useCallback(() => {
-    setMessages([]);
-    setError(null);
-    setLastResponseTime(null);
-  }, []);
+  const handleCompareSubmit = useCallback(async () => {
+    const content = input.trim();
+    const selectedModels = settings.compareModels;
+    if (
+      !content ||
+      isLoading ||
+      selectedModels.length < 2 ||
+      selectedModels.length > 4
+    ) {
+      return;
+    }
+
+    const turn = createTurn(content, selectedModels);
+    const nextTurns = [...compareTurns, turn];
+
+    setInput("");
+    setCompareError(null);
+    setCompareTurns(nextTurns);
+    setIsCompareLoading(true);
+
+    await Promise.allSettled(
+      selectedModels.map((model) =>
+        runCompareModel(turn.id, model, nextTurns, settings),
+      ),
+    );
+
+    setIsCompareLoading(false);
+  }, [compareTurns, input, isLoading, runCompareModel, settings]);
+
+  const handleRetry = useCallback(
+    async (turnId: string, model: string) => {
+      if (isLoading) {
+        return;
+      }
+
+      setCompareError(null);
+      setIsCompareLoading(true);
+      await runCompareModel(turnId, model, compareTurns, settings);
+      setIsCompareLoading(false);
+    },
+    [compareTurns, isLoading, runCompareModel, settings],
+  );
+
+  const clearCurrentChat = useCallback(() => {
+    setInput("");
+    if (settings.mode === "single") {
+      setSingleMessages([]);
+      setSingleError(null);
+      setLastResponseTime(null);
+      return;
+    }
+
+    setCompareTurns([]);
+    setCompareError(null);
+  }, [settings.mode]);
+
+  const changeMode = useCallback(
+    (mode: ChatMode) => {
+      if (!isLoading) {
+        updateSetting("mode", mode);
+        setInput("");
+      }
+    },
+    [isLoading, updateSetting],
+  );
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-[1800px] flex-col bg-[var(--panel)] shadow-2xl shadow-black/5 md:h-dvh md:min-h-0">
       <Header
         connectionStatus={connectionStatus}
         selectedModel={settings.model}
+        mode={settings.mode}
+        compareModelCount={settings.compareModels.length}
+        disabled={isLoading}
+        onModeChange={changeMode}
       />
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <Sidebar
+          mode={settings.mode}
           models={models}
           selectedModel={settings.model}
+          selectedModels={settings.compareModels}
           temperature={settings.temperature}
           topP={settings.top_p}
           numCtx={settings.num_ctx}
@@ -285,8 +452,13 @@ export default function Home() {
           connectionStatus={connectionStatus}
           lastResponseTime={lastResponseTime}
           isLoading={isLoading}
-          hasMessages={messages.length > 0}
+          hasMessages={
+            settings.mode === "single"
+              ? singleMessages.length > 0
+              : compareTurns.length > 0
+          }
           onModelChange={(value) => updateSetting("model", value)}
+          onModelsChange={(value) => updateSetting("compareModels", value)}
           onTemperatureChange={(value) =>
             updateSetting("temperature", value)
           }
@@ -295,17 +467,31 @@ export default function Home() {
           onSystemPromptChange={(value) =>
             updateSetting("systemPrompt", value)
           }
-          onClearChat={clearChat}
+          onClearChat={clearCurrentChat}
         />
-        <ChatWindow
-          messages={messages}
-          input={input}
-          selectedModel={settings.model}
-          isLoading={isLoading}
-          error={error}
-          onInputChange={setInput}
-          onSubmit={handleSubmit}
-        />
+
+        {settings.mode === "single" ? (
+          <ChatWindow
+            messages={singleMessages}
+            input={input}
+            selectedModel={settings.model}
+            isLoading={isSingleLoading}
+            error={singleError}
+            onInputChange={setInput}
+            onSubmit={handleSingleSubmit}
+          />
+        ) : (
+          <CompareWindow
+            turns={compareTurns}
+            input={input}
+            selectedModelCount={settings.compareModels.length}
+            isLoading={isCompareLoading}
+            error={compareError}
+            onInputChange={setInput}
+            onSubmit={handleCompareSubmit}
+            onRetry={handleRetry}
+          />
+        )}
       </div>
     </div>
   );
