@@ -2,11 +2,18 @@ import { CONTEXT_LENGTHS, DEFAULT_SETTINGS } from "@/lib/constants";
 import type { ChatSettings } from "@/lib/types";
 
 export const SETTINGS_STORAGE_KEY = "ollama-chat-lab:settings";
-const SETTINGS_VERSION = 1;
+const SETTINGS_VERSION = 2;
 
 type StoredSettings = {
   version: number;
   settings: ChatSettings;
+};
+
+type LegacyChatSettings = Omit<ChatSettings, "mode" | "compareModels">;
+
+type LegacyStoredSettings = {
+  version: 1;
+  settings: LegacyChatSettings;
 };
 
 function isFiniteNumber(value: unknown): value is number {
@@ -29,7 +36,7 @@ export function loadSettings(): ChatSettings {
       typeof parsed !== "object" ||
       parsed === null ||
       !("version" in parsed) ||
-      parsed.version !== SETTINGS_VERSION ||
+      (parsed.version !== 1 && parsed.version !== SETTINGS_VERSION) ||
       !("settings" in parsed) ||
       typeof parsed.settings !== "object" ||
       parsed.settings === null
@@ -39,12 +46,24 @@ export function loadSettings(): ChatSettings {
 
     const settings = parsed.settings as Partial<ChatSettings>;
     const validContextLengths: readonly number[] = CONTEXT_LENGTHS;
+    const isLegacySettings = (parsed as LegacyStoredSettings).version === 1;
 
     return {
+      mode:
+        !isLegacySettings &&
+        (settings.mode === "single" || settings.mode === "compare")
+          ? settings.mode
+          : DEFAULT_SETTINGS.mode,
       model:
         typeof settings.model === "string" && settings.model.length > 0
           ? settings.model
           : DEFAULT_SETTINGS.model,
+      compareModels:
+        !isLegacySettings && Array.isArray(settings.compareModels)
+          ? settings.compareModels.filter(
+              (model): model is string => typeof model === "string",
+            )
+          : DEFAULT_SETTINGS.compareModels,
       temperature:
         isFiniteNumber(settings.temperature) &&
         settings.temperature >= 0 &&

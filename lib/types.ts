@@ -5,6 +5,8 @@ export type ChatMessage = {
   content: string;
 };
 
+export type ChatMode = "single" | "compare";
+
 export type ModelInfo = {
   name: string;
   modified_at?: string;
@@ -12,11 +14,33 @@ export type ModelInfo = {
 };
 
 export type ChatSettings = {
+  mode: ChatMode;
   model: string;
+  compareModels: string[];
   temperature: number;
   top_p: number;
   num_ctx: number;
   systemPrompt: string;
+};
+
+export type ModelResponseStatus =
+  | "queued"
+  | "streaming"
+  | "completed"
+  | "error";
+
+export type ModelResponse = {
+  model: string;
+  content: string;
+  status: ModelResponseStatus;
+  responseTime: number | null;
+  error: string | null;
+};
+
+export type CompareTurn = {
+  id: string;
+  prompt: string;
+  responses: ModelResponse[];
 };
 
 export type ConnectionStatus = "checking" | "connected" | "disconnected";
