@@ -6,6 +6,7 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   mode: "single",
   model: DEFAULT_MODEL,
   compareModels: [],
+  judgeModel: "",
   temperature: 0.7,
   top_p: 0.9,
   num_ctx: 4096,

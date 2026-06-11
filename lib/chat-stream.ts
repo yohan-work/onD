@@ -1,10 +1,22 @@
-import type { ChatMessage, ChatSettings } from "@/lib/types";
+import type {
+  ChatMessage,
+  ChatSettings,
+  GenerationMetrics,
+} from "@/lib/types";
 
 type StreamChunk = {
   message?: {
     content?: unknown;
   };
   error?: unknown;
+  done?: unknown;
+  done_reason?: unknown;
+  total_duration?: unknown;
+  load_duration?: unknown;
+  prompt_eval_count?: unknown;
+  prompt_eval_duration?: unknown;
+  eval_count?: unknown;
+  eval_duration?: unknown;
 };
 
 export async function readErrorMessage(response: Response) {
@@ -30,6 +42,8 @@ type StreamChatOptions = {
   messages: ChatMessage[];
   settings: Pick<ChatSettings, "temperature" | "top_p" | "num_ctx">;
   onContent: (content: string) => void;
+  format?: "json" | Record<string, unknown>;
+  signal?: AbortSignal;
 };
 
 export async function streamChat({
@@ -37,8 +51,22 @@ export async function streamChat({
   messages,
   settings,
   onContent,
+  format,
+  signal,
 }: StreamChatOptions) {
   const start = performance.now();
+  let firstTokenTime: number | null = null;
+  let metrics: GenerationMetrics = {
+    totalDuration: null,
+    loadDuration: null,
+    promptEvalCount: null,
+    promptEvalDuration: null,
+    evalCount: null,
+    evalDuration: null,
+    tokensPerSecond: null,
+    firstTokenTime: null,
+    doneReason: null,
+  };
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: {
@@ -52,7 +80,9 @@ export async function streamChat({
         top_p: settings.top_p,
         num_ctx: settings.num_ctx,
       },
+      ...(format ? { format } : {}),
     }),
+    signal,
   });
 
   if (!response.ok) {
@@ -87,7 +117,47 @@ export async function streamChat({
 
     const nextContent = chunk.message?.content;
     if (typeof nextContent === "string" && nextContent.length > 0) {
+      if (firstTokenTime === null) {
+        firstTokenTime = performance.now() - start;
+      }
       onContent(nextContent);
+    }
+
+    if (chunk.done === true) {
+      const evalCount =
+        typeof chunk.eval_count === "number" ? chunk.eval_count : null;
+      const evalDuration =
+        typeof chunk.eval_duration === "number"
+          ? chunk.eval_duration
+          : null;
+
+      metrics = {
+        totalDuration:
+          typeof chunk.total_duration === "number"
+            ? chunk.total_duration
+            : null,
+        loadDuration:
+          typeof chunk.load_duration === "number"
+            ? chunk.load_duration
+            : null,
+        promptEvalCount:
+          typeof chunk.prompt_eval_count === "number"
+            ? chunk.prompt_eval_count
+            : null,
+        promptEvalDuration:
+          typeof chunk.prompt_eval_duration === "number"
+            ? chunk.prompt_eval_duration
+            : null,
+        evalCount,
+        evalDuration,
+        tokensPerSecond:
+          evalCount !== null && evalDuration
+            ? evalCount / (evalDuration / 1_000_000_000)
+            : null,
+        firstTokenTime,
+        doneReason:
+          typeof chunk.done_reason === "string" ? chunk.done_reason : null,
+      };
     }
   };
 
@@ -105,5 +175,8 @@ export async function streamChat({
   }
 
   processLine(buffer);
-  return performance.now() - start;
+  return {
+    responseTime: performance.now() - start,
+    metrics,
+  };
 }

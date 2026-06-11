@@ -5,7 +5,7 @@ export type ChatMessage = {
   content: string;
 };
 
-export type ChatMode = "single" | "compare";
+export type ChatMode = "single" | "compare" | "lab";
 
 export type ModelInfo = {
   name: string;
@@ -17,6 +17,7 @@ export type ChatSettings = {
   mode: ChatMode;
   model: string;
   compareModels: string[];
+  judgeModel: string;
   temperature: number;
   top_p: number;
   num_ctx: number;
@@ -35,6 +36,7 @@ export type ModelResponse = {
   status: ModelResponseStatus;
   responseTime: number | null;
   error: string | null;
+  metrics?: GenerationMetrics | null;
 };
 
 export type CompareTurn = {
@@ -57,4 +59,112 @@ export type ChatRequest = {
     top_p?: number;
     num_ctx?: number;
   };
+  format?: "json" | Record<string, unknown>;
+  stream?: boolean;
+};
+
+export type GenerationMetrics = {
+  totalDuration: number | null;
+  loadDuration: number | null;
+  promptEvalCount: number | null;
+  promptEvalDuration: number | null;
+  evalCount: number | null;
+  evalDuration: number | null;
+  tokensPerSecond: number | null;
+  firstTokenTime: number | null;
+  doneReason: string | null;
+};
+
+export type RuntimeModel = {
+  name: string;
+  parameterSize?: string;
+  quantizationLevel?: string;
+  sizeVram?: number;
+  contextLength?: number;
+  expiresAt?: string;
+};
+
+export type TaskCategory =
+  | "general"
+  | "summary"
+  | "code"
+  | "translation"
+  | "qa"
+  | "instruction";
+
+export type RubricCriterion = {
+  id: string;
+  label: string;
+  weight: number;
+};
+
+export type BenchmarkCase = {
+  id: string;
+  title: string;
+  prompt: string;
+  category: TaskCategory;
+};
+
+export type BenchmarkSuite = {
+  id: string;
+  name: string;
+  description: string;
+  cases: BenchmarkCase[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HumanEvaluation = {
+  winnerRunId: string | null;
+  scores: Record<string, Record<string, number>>;
+  note: string;
+  completedAt: string | null;
+};
+
+export type JudgeEvaluation = {
+  winnerModel: string;
+  scores: Record<string, Record<string, number>>;
+  rationale: string;
+  confidence: number;
+  judgeModel: string;
+  completedAt: string;
+};
+
+export type BenchmarkRun = {
+  id: string;
+  caseId: string;
+  model: string;
+  content: string;
+  status: "pending" | "running" | "completed" | "error";
+  error: string | null;
+  metrics: GenerationMetrics | null;
+};
+
+export type ExperimentCaseResult = {
+  caseId: string;
+  prompt: string;
+  category: TaskCategory;
+  runs: BenchmarkRun[];
+  blindOrder: string[];
+  humanEvaluation: HumanEvaluation | null;
+  judgeEvaluation: JudgeEvaluation | null;
+};
+
+export type Experiment = {
+  id: string;
+  name: string;
+  suiteId: string;
+  suiteName: string;
+  models: string[];
+  judgeModel: string;
+  settings: Pick<
+    ChatSettings,
+    "temperature" | "top_p" | "num_ctx" | "systemPrompt"
+  >;
+  status: "draft" | "running" | "paused" | "completed" | "cancelled";
+  currentRun: number;
+  totalRuns: number;
+  results: ExperimentCaseResult[];
+  createdAt: string;
+  updatedAt: string;
 };
