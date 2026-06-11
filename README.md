@@ -5,7 +5,7 @@ Ollama Chat Lab is a local web UI for testing Ollama models such as
 keeping model inference on the local machine.
 
 ### 26.06.11(for model testing)
-<img width="1547" height="913" alt="스크린샷 2026-06-11 오후 1 56 06" src="https://github.com/user-attachments/assets/8f95f922-020d-45e3-a575-695158b1ff6c" />
+<img width="1794" height="921" alt="multiAgent" src="https://github.com/user-attachments/assets/e0ff31cb-ec33-46ad-a0e1-65eb83f86300" />
 
 
 ## Features
