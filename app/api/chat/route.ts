@@ -52,7 +52,7 @@ function validateRequest(value: unknown): value is ChatRequest {
   }
 
   if (body.options === undefined) {
-    return true;
+    return validateExtendedFields(body);
   }
 
   if (typeof body.options !== "object" || body.options === null) {
@@ -65,7 +65,23 @@ function validateRequest(value: unknown): value is ChatRequest {
     (temperature === undefined || isNumberInRange(temperature, 0, 2)) &&
     (topP === undefined || isNumberInRange(topP, 0, 1)) &&
     (numCtx === undefined ||
-      (Number.isInteger(numCtx) && isNumberInRange(numCtx, 1, 1_048_576)))
+      (Number.isInteger(numCtx) &&
+        isNumberInRange(numCtx, 1, 1_048_576))) &&
+    validateExtendedFields(body)
+  );
+}
+
+function validateExtendedFields(body: Partial<ChatRequest>) {
+  const validFormat =
+    body.format === undefined ||
+    body.format === "json" ||
+    (typeof body.format === "object" &&
+      body.format !== null &&
+      !Array.isArray(body.format));
+
+  return (
+    validFormat &&
+    (body.stream === undefined || typeof body.stream === "boolean")
   );
 }
 
@@ -100,7 +116,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         ...body,
         model: body.model.trim(),
-        stream: true,
+        stream: body.stream ?? true,
       }),
       signal: request.signal,
     });
@@ -121,7 +137,10 @@ export async function POST(request: NextRequest) {
     return new Response(response.body, {
       status: 200,
       headers: {
-        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Content-Type":
+          body.stream === false
+            ? "application/json; charset=utf-8"
+            : "application/x-ndjson; charset=utf-8",
         "Cache-Control": "no-cache, no-transform",
         Connection: "keep-alive",
       },
