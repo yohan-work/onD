@@ -14,6 +14,12 @@ keeping model inference on the local machine.
 - Switch between single-model chat and multi-model comparison
 - Send one prompt to 2-4 models in parallel
 - Compare independent streaming responses and response times
+- Build reusable benchmark suites and run models sequentially
+- Capture prompt/output tokens, first-token latency, and tokens/sec
+- Review responses blind with task-specific scoring rubrics
+- Use a dedicated local Ollama model as an optional Judge
+- Store experiments locally in IndexedDB with JSON import/export
+- Compare quality, blind win rate, speed, and error rate
 - Stream chat responses in real time
 - Preserve conversation history within the current session
 - Configure temperature, top-p, and context length
@@ -57,6 +63,35 @@ All models use the same temperature, top-p, context length, and system prompt
 so their output can be compared under consistent conditions. On later turns,
 each model receives the user conversation plus only its own completed previous
 responses. A failed model can be retried without rerunning successful models.
+
+## Evaluation Lab
+
+Select `Lab` in the header to open the local benchmark workspace.
+
+### Quick start
+
+1. Click `성능 평가` in the header.
+2. Keep the prepared starter test suite selected.
+3. Confirm that at least two target models are checked. The app automatically
+   selects two available models on first use.
+4. Click `모델 성능 평가 시작`.
+5. When each response is ready, score every item from 1 to 5 and choose the
+   best response.
+6. Click `평가 완료하고 모델명 확인`.
+7. Open `3. 결과 보기` to compare quality and speed.
+
+The Judge model, custom test suites, runtime details, and JSON backup are
+optional advanced features hidden behind expandable controls.
+
+Models execute sequentially to reduce VRAM contention
+   and keep performance measurements comparable.
+
+Benchmark suites, model runs, evaluations, and metrics are stored in browser
+IndexedDB. Settings remain in `localStorage`. The Lab can export and import a
+complete JSON backup.
+
+The current task rubrics cover general answers, summarization, code,
+translation, factual Q&A, and strict instruction following.
 
 ## Environment Variables
 
@@ -119,6 +154,15 @@ response is streamed as Ollama NDJSON.
 }
 ```
 
+The proxy also accepts Ollama `format` JSON schemas for structured local Judge
+output. The final stream chunk is preserved so the client can calculate model
+performance metrics.
+
+### `GET /api/runtime`
+
+Proxies Ollama's `/api/ps` endpoint and returns currently loaded models,
+available VRAM information, quantization level, and active context length.
+
 ## Troubleshooting
 
 ### Ollama is not running
@@ -144,10 +188,11 @@ generation controls, then retry the request.
 
 ## Current Scope
 
-This release supports independent parallel model responses. It intentionally
-excludes model-to-model debate, a final synthesizer model, accounts, databases,
-cloud deployment, RAG, file uploads, multimodal input, long-term memory, and
-Markdown rendering.
+This release supports independent parallel comparison and sequential benchmark
+evaluation. All inference and Judge evaluation use locally installed Ollama
+models. It intentionally excludes cloud models, model-to-model debate, a final
+synthesizer model, accounts, server databases, RAG, file uploads, multimodal
+input, and long-term memory.
 
 ## Roadmap
 
@@ -155,7 +200,7 @@ Markdown rendering.
 - Prompt template management
 - Saved and searchable chat sessions
 - Markdown rendering and code highlighting
-- Response ratings and model scorecards
+- Historical trend comparison across repeated benchmark runs
 - Text and Markdown file summarization
 - Link summarization and archiving
 - Markdown export and Obsidian integration

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatWindow } from "@/components/ChatWindow";
 import { CompareWindow } from "@/components/CompareWindow";
 import { Header } from "@/components/Header";
+import { BenchmarkLab } from "@/components/BenchmarkLab";
 import { Sidebar } from "@/components/Sidebar";
 import { streamChat } from "@/lib/chat-stream";
 import { DEFAULT_MODEL, DEFAULT_SETTINGS } from "@/lib/constants";
@@ -266,7 +267,7 @@ export default function Home() {
       }));
 
       try {
-        const responseTime = await streamChat({
+        const { responseTime, metrics } = await streamChat({
           model,
           messages: buildCompareMessages(
             turns,
@@ -287,6 +288,7 @@ export default function Home() {
           ...response,
           status: "completed",
           responseTime,
+          metrics,
         }));
         setConnectionStatus("connected");
       } catch (requestError) {
@@ -329,7 +331,7 @@ export default function Home() {
     ]);
 
     try {
-      const responseTime = await streamChat({
+      const { responseTime } = await streamChat({
         model: settings.model,
         messages: requestMessages,
         settings,
@@ -440,7 +442,8 @@ export default function Home() {
         onModeChange={changeMode}
       />
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <Sidebar
+        {settings.mode !== "lab" ? (
+          <Sidebar
           mode={settings.mode}
           models={models}
           selectedModel={settings.model}
@@ -467,8 +470,9 @@ export default function Home() {
           onSystemPromptChange={(value) =>
             updateSetting("systemPrompt", value)
           }
-          onClearChat={clearCurrentChat}
-        />
+            onClearChat={clearCurrentChat}
+          />
+        ) : null}
 
         {settings.mode === "single" ? (
           <ChatWindow
@@ -480,7 +484,7 @@ export default function Home() {
             onInputChange={setInput}
             onSubmit={handleSingleSubmit}
           />
-        ) : (
+        ) : settings.mode === "compare" ? (
           <CompareWindow
             turns={compareTurns}
             input={input}
@@ -490,6 +494,15 @@ export default function Home() {
             onInputChange={setInput}
             onSubmit={handleCompareSubmit}
             onRetry={handleRetry}
+          />
+        ) : (
+          <BenchmarkLab
+            models={models}
+            settings={settings}
+            judgeModel={settings.judgeModel}
+            onJudgeModelChange={(model) =>
+              updateSetting("judgeModel", model)
+            }
           />
         )}
       </div>

@@ -24,6 +24,8 @@ export function ChatWindow({
   onSubmit,
 }: ChatWindowProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const shouldFollowStreamRef = useRef(true);
+  const previousMessageCountRef = useRef(0);
 
   useEffect(() => {
     const scrollArea = scrollAreaRef.current;
@@ -31,10 +33,20 @@ export function ChatWindow({
       return;
     }
 
-    scrollArea.scrollTo({
-      top: scrollArea.scrollHeight,
-      behavior: messages.length > 2 ? "smooth" : "auto",
-    });
+    const hasNewMessage =
+      messages.length > previousMessageCountRef.current;
+    previousMessageCountRef.current = messages.length;
+
+    if (hasNewMessage) {
+      shouldFollowStreamRef.current = true;
+    }
+
+    if (shouldFollowStreamRef.current) {
+      scrollArea.scrollTo({
+        top: scrollArea.scrollHeight,
+        behavior: hasNewMessage ? "smooth" : "auto",
+      });
+    }
   }, [messages]);
 
   return (
@@ -43,6 +55,14 @@ export function ChatWindow({
         ref={scrollAreaRef}
         className="min-h-0 flex-1 overflow-y-auto"
         aria-live="polite"
+        onScroll={(event) => {
+          const scrollArea = event.currentTarget;
+          const distanceFromBottom =
+            scrollArea.scrollHeight -
+            scrollArea.scrollTop -
+            scrollArea.clientHeight;
+          shouldFollowStreamRef.current = distanceFromBottom < 120;
+        }}
       >
         <div className="mx-auto flex min-h-full max-w-[860px] flex-col px-5 py-8 sm:px-8 sm:py-12">
           {messages.length === 0 ? (

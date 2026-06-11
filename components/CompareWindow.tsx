@@ -26,6 +26,8 @@ export function CompareWindow({
   onRetry,
 }: CompareWindowProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const shouldFollowStreamRef = useRef(true);
+  const previousTurnCountRef = useRef(0);
   const selectionIsValid =
     selectedModelCount >= 2 && selectedModelCount <= 4;
 
@@ -35,10 +37,19 @@ export function CompareWindow({
       return;
     }
 
-    scrollArea.scrollTo({
-      top: scrollArea.scrollHeight,
-      behavior: turns.length > 1 ? "smooth" : "auto",
-    });
+    const hasNewTurn = turns.length > previousTurnCountRef.current;
+    previousTurnCountRef.current = turns.length;
+
+    if (hasNewTurn) {
+      shouldFollowStreamRef.current = true;
+    }
+
+    if (shouldFollowStreamRef.current) {
+      scrollArea.scrollTo({
+        top: scrollArea.scrollHeight,
+        behavior: hasNewTurn ? "smooth" : "auto",
+      });
+    }
   }, [turns]);
 
   return (
@@ -47,6 +58,14 @@ export function CompareWindow({
         ref={scrollAreaRef}
         className="min-h-0 flex-1 overflow-y-auto"
         aria-live="polite"
+        onScroll={(event) => {
+          const scrollArea = event.currentTarget;
+          const distanceFromBottom =
+            scrollArea.scrollHeight -
+            scrollArea.scrollTop -
+            scrollArea.clientHeight;
+          shouldFollowStreamRef.current = distanceFromBottom < 120;
+        }}
       >
         <div className="mx-auto flex min-h-full max-w-[1180px] flex-col px-5 py-8 sm:px-8 sm:py-10">
           {turns.length === 0 ? (

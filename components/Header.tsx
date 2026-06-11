@@ -21,7 +21,9 @@ export function Header({
   const activeLabel =
     mode === "single"
       ? selectedModel || "NO MODEL"
-      : `${compareModelCount} MODELS`;
+      : mode === "compare"
+        ? `${compareModelCount} MODELS`
+        : "EVALUATION LAB";
 
   return (
     <header className="flex min-h-20 shrink-0 flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] bg-[var(--panel)] px-5 py-4 md:flex-nowrap md:px-7">
@@ -46,7 +48,7 @@ export function Header({
 
       <div className="order-3 flex w-full justify-center md:order-none md:w-auto">
         <div className="inline-flex rounded-xl border border-[var(--line)] bg-[var(--panel-muted)] p-1">
-          {(["single", "compare"] as const).map((nextMode) => (
+          {(["single", "compare", "lab"] as const).map((nextMode) => (
             <button
               key={nextMode}
               type="button"
@@ -58,7 +60,11 @@ export function Header({
                   : "text-[var(--ink-secondary)] hover:text-[var(--ink)]"
               }`}
             >
-              {nextMode}
+              {nextMode === "single"
+                ? "채팅"
+                : nextMode === "compare"
+                  ? "모델 비교"
+                  : "성능 평가"}
             </button>
           ))}
         </div>
