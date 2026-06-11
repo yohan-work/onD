@@ -1,17 +1,30 @@
 import { StatusBadge } from "@/components/StatusBadge";
-import type { ConnectionStatus } from "@/lib/types";
+import type { ChatMode, ConnectionStatus } from "@/lib/types";
 
 type HeaderProps = {
   connectionStatus: ConnectionStatus;
   selectedModel: string;
+  mode: ChatMode;
+  compareModelCount: number;
+  disabled: boolean;
+  onModeChange: (mode: ChatMode) => void;
 };
 
 export function Header({
   connectionStatus,
   selectedModel,
+  mode,
+  compareModelCount,
+  disabled,
+  onModeChange,
 }: HeaderProps) {
+  const activeLabel =
+    mode === "single"
+      ? selectedModel || "NO MODEL"
+      : `${compareModelCount} MODELS`;
+
   return (
-    <header className="flex min-h-20 shrink-0 items-center justify-between gap-5 border-b border-[var(--line)] bg-[var(--panel)] px-5 py-4 md:px-7">
+    <header className="flex min-h-20 shrink-0 flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] bg-[var(--panel)] px-5 py-4 md:flex-nowrap md:px-7">
       <div className="flex min-w-0 items-center gap-3.5">
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--accent)] font-mono text-sm font-semibold text-white shadow-sm">
           OL
@@ -26,16 +39,36 @@ export function Header({
             </span>
           </div>
           <p className="mt-0.5 truncate font-mono text-[11px] text-[var(--ink-secondary)]">
-            LOCAL / {selectedModel || "NO MODEL"}
+            LOCAL / {activeLabel}
           </p>
+        </div>
+      </div>
+
+      <div className="order-3 flex w-full justify-center md:order-none md:w-auto">
+        <div className="inline-flex rounded-xl border border-[var(--line)] bg-[var(--panel-muted)] p-1">
+          {(["single", "compare"] as const).map((nextMode) => (
+            <button
+              key={nextMode}
+              type="button"
+              disabled={disabled}
+              onClick={() => onModeChange(nextMode)}
+              className={`rounded-lg px-4 py-1.5 text-xs font-semibold capitalize transition disabled:cursor-not-allowed ${
+                mode === nextMode
+                  ? "bg-white text-[var(--ink)] shadow-sm"
+                  : "text-[var(--ink-secondary)] hover:text-[var(--ink)]"
+              }`}
+            >
+              {nextMode}
+            </button>
+          ))}
         </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
         <StatusBadge status={connectionStatus} />
-        {selectedModel ? (
+        {activeLabel ? (
           <span className="hidden max-w-52 truncate rounded-full bg-[var(--panel-muted)] px-3 py-1.5 font-mono text-xs text-[var(--ink-secondary)] lg:inline">
-            {selectedModel}
+            {activeLabel}
           </span>
         ) : null}
       </div>

@@ -94,7 +94,11 @@ export function ChatWindow({
 
       <ChatInput
         value={input}
-        selectedModel={selectedModel}
+        placeholder={
+          selectedModel
+            ? `Message ${selectedModel}...`
+            : "Select a model to start..."
+        }
         disabled={isLoading || !selectedModel}
         onChange={onInputChange}
         onSubmit={onSubmit}

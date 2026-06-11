@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 type ChatInputProps = {
   value: string;
-  selectedModel: string;
+  placeholder: string;
   disabled: boolean;
   onChange: (value: string) => void;
   onSubmit: () => void;
@@ -10,7 +10,7 @@ type ChatInputProps = {
 
 export function ChatInput({
   value,
-  selectedModel,
+  placeholder,
   disabled,
   onChange,
   onSubmit,
@@ -39,11 +39,7 @@ export function ChatInput({
             rows={1}
             disabled={disabled}
             aria-label="Chat message"
-            placeholder={
-              selectedModel
-                ? `Message ${selectedModel}...`
-                : "Select a model to start..."
-            }
+            placeholder={placeholder}
             onChange={(event) => onChange(event.target.value)}
             onKeyDown={(event) => {
               if (

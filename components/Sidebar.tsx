@@ -1,14 +1,18 @@
 import { ModelSelector } from "@/components/ModelSelector";
+import { MultiModelSelector } from "@/components/MultiModelSelector";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { StatusBadge } from "@/components/StatusBadge";
 import type {
+  ChatMode,
   ConnectionStatus,
   ModelInfo,
 } from "@/lib/types";
 
 type SidebarProps = {
+  mode: ChatMode;
   models: ModelInfo[];
   selectedModel: string;
+  selectedModels: string[];
   temperature: number;
   topP: number;
   numCtx: number;
@@ -18,6 +22,7 @@ type SidebarProps = {
   isLoading: boolean;
   hasMessages: boolean;
   onModelChange: (model: string) => void;
+  onModelsChange: (models: string[]) => void;
   onTemperatureChange: (value: number) => void;
   onTopPChange: (value: number) => void;
   onNumCtxChange: (value: number) => void;
@@ -26,8 +31,10 @@ type SidebarProps = {
 };
 
 export function Sidebar({
+  mode,
   models,
   selectedModel,
+  selectedModels,
   temperature,
   topP,
   numCtx,
@@ -37,6 +44,7 @@ export function Sidebar({
   isLoading,
   hasMessages,
   onModelChange,
+  onModelsChange,
   onTemperatureChange,
   onTopPChange,
   onNumCtxChange,
@@ -46,12 +54,21 @@ export function Sidebar({
   return (
     <aside className="border-b border-[var(--line)] bg-[var(--panel-muted)] md:w-[310px] md:shrink-0 md:border-r md:border-b-0">
       <div className="grid gap-6 p-5 sm:grid-cols-2 md:block md:h-full md:space-y-7 md:overflow-y-auto md:p-6">
-        <ModelSelector
-          models={models}
-          selectedModel={selectedModel}
-          disabled={connectionStatus === "checking" || isLoading}
-          onChange={onModelChange}
-        />
+        {mode === "single" ? (
+          <ModelSelector
+            models={models}
+            selectedModel={selectedModel}
+            disabled={connectionStatus === "checking" || isLoading}
+            onChange={onModelChange}
+          />
+        ) : (
+          <MultiModelSelector
+            models={models}
+            selectedModels={selectedModels}
+            disabled={connectionStatus === "checking" || isLoading}
+            onChange={onModelsChange}
+          />
+        )}
 
         <SettingsPanel
           temperature={temperature}
@@ -84,10 +101,12 @@ export function Sidebar({
             </div>
             <div className="mt-3 flex items-end justify-between gap-3">
               <span className="text-xs text-[var(--ink-secondary)]">
-                Last response
+                {mode === "single" ? "Last response" : "Response times"}
               </span>
               <span className="font-mono text-sm font-medium">
-                {lastResponseTime === null
+                {mode === "compare"
+                  ? "Per card"
+                  : lastResponseTime === null
                   ? "--"
                   : `${(lastResponseTime / 1000).toFixed(2)}s`}
               </span>
