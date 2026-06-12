@@ -5,15 +5,23 @@ import {
   normalizeModels,
   ollamaConnectionErrorMessage,
 } from "@/lib/ollama";
+import type { RuntimeModel } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const response = await fetch(`${getOllamaBaseUrl()}/api/tags`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
-    });
+    const baseUrl = getOllamaBaseUrl();
+    const [response, runtimeResponse] = await Promise.all([
+      fetch(`${baseUrl}/api/tags`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      }),
+      fetch(`${baseUrl}/api/ps`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      }).catch(() => null),
+    ]);
 
     if (!response.ok) {
       console.error("Ollama models request failed:", response.status);
@@ -31,7 +39,54 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ models: normalizeModels(payload) });
+    let runtimeModels: RuntimeModel[] = [];
+    if (runtimeResponse?.ok) {
+      const runtimePayload = (await runtimeResponse.json()) as {
+        models?: Array<{
+          name?: unknown;
+          size_vram?: unknown;
+          context_length?: unknown;
+          details?: {
+            parameter_size?: unknown;
+            quantization_level?: unknown;
+          };
+        }>;
+      };
+      runtimeModels = Array.isArray(runtimePayload.models)
+        ? runtimePayload.models.flatMap((model) =>
+            typeof model.name === "string"
+              ? [{
+                  name: model.name,
+                  ...(typeof model.size_vram === "number"
+                    ? { sizeVram: model.size_vram }
+                    : {}),
+                  ...(typeof model.context_length === "number"
+                    ? { contextLength: model.context_length }
+                    : {}),
+                  ...(typeof model.details?.parameter_size === "string"
+                    ? { parameterSize: model.details.parameter_size }
+                    : {}),
+                  ...(typeof model.details?.quantization_level === "string"
+                    ? { quantizationLevel: model.details.quantization_level }
+                    : {}),
+                }]
+              : [],
+          )
+        : [];
+    }
+
+    const models = normalizeModels(payload).map((model) => {
+      const runtime = runtimeModels.find(
+        (candidate) => candidate.name === model.name,
+      );
+      return {
+        ...model,
+        loaded: Boolean(runtime),
+        ...(runtime ?? {}),
+      };
+    });
+
+    return NextResponse.json({ models });
   } catch (error) {
     console.error("Failed to connect to Ollama:", error);
     return NextResponse.json(
