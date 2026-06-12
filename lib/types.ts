@@ -5,12 +5,56 @@ export type ChatMessage = {
   content: string;
 };
 
+export type MessageStatus = "complete" | "streaming" | "stopped" | "error";
+
+export type TextAttachment = {
+  id: string;
+  name: string;
+  type: "text/plain" | "text/markdown";
+  size: number;
+  content: string;
+};
+
+export type StoredMessage = ChatMessage & {
+  id: string;
+  createdAt: string;
+  status: MessageStatus;
+  metrics?: GenerationMetrics | null;
+  attachments?: TextAttachment[];
+};
+
+export type ConversationBranch = {
+  sourceConversationId: string;
+  sourceMessageId: string;
+};
+
+export type Conversation = {
+  id: string;
+  title: string;
+  mode: "single";
+  model: string;
+  settings: Pick<
+    ChatSettings,
+    "temperature" | "top_p" | "num_ctx" | "systemPrompt"
+  >;
+  messages: StoredMessage[];
+  favorite: boolean;
+  branch: ConversationBranch | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ChatMode = "single" | "compare" | "lab";
 
 export type ModelInfo = {
   name: string;
   modified_at?: string;
   size?: number;
+  loaded?: boolean;
+  sizeVram?: number;
+  parameterSize?: string;
+  quantizationLevel?: string;
+  contextLength?: number;
 };
 
 export type ChatSettings = {

@@ -21,12 +21,18 @@ keeping model inference on the local machine.
 - Store experiments locally in IndexedDB with JSON import/export
 - Compare quality, blind win rate, speed, and error rate
 - Stream chat responses in real time
-- Preserve conversation history within the current session
+- Stop, regenerate, or continue streaming responses
+- Save, search, rename, favorite, delete, and restore conversations locally
+- Edit a previous user message into a branched conversation
+- Render Markdown, tables, links, and copyable code blocks
+- Attach up to four local text or Markdown files per message
+- Export conversations as JSON or Markdown
+- Turn saved conversation prompts into a benchmark suite
 - Configure temperature, top-p, and context length
 - Add an optional system prompt
 - Clear the current conversation without resetting settings
 - Persist model settings in `localStorage`
-- Show Ollama connection state and response duration
+- Show Ollama connection, installed/loaded model details, and response duration
 - Responsive desktop and mobile layouts
 
 ## Prerequisites
@@ -87,8 +93,20 @@ Models execute sequentially to reduce VRAM contention
    and keep performance measurements comparable.
 
 Benchmark suites, model runs, evaluations, and metrics are stored in browser
-IndexedDB. Settings remain in `localStorage`. The Lab can export and import a
+IndexedDB. Saved conversations and their text attachments use the same local
+database. Settings remain in `localStorage`. The Lab can export and import a
 complete JSON backup.
+
+## Saved Conversations
+
+Single-model chats are saved automatically in the browser. Use the sidebar to
+search message content, rename or favorite a conversation, export it, or create
+a benchmark suite from its user prompts. Choosing **Edit & branch** on a user
+message creates an independent conversation without changing the source.
+
+Text attachments are read entirely in the browser and included in the model
+context. The app accepts `.txt`, `.md`, and `.markdown` files up to 256 KB each.
+Files are never uploaded to an external service.
 
 The current task rubrics cover general answers, summarization, code,
 translation, factual Q&A, and strict instruction following.
@@ -115,6 +133,7 @@ with the local Next.js API routes rather than calling Ollama directly.
 npm run dev
 npm run lint
 npm run typecheck
+npm test
 npm run build
 npm run start
 ```
@@ -197,10 +216,8 @@ input, and long-term memory.
 ## Roadmap
 
 - Model debate and final synthesis workflows
-- Prompt template management
-- Saved and searchable chat sessions
-- Markdown rendering and code highlighting
+- Prompt template management and variables
 - Historical trend comparison across repeated benchmark runs
-- Text and Markdown file summarization
+- Context budgeting and conversation compaction
 - Link summarization and archiving
-- Markdown export and Obsidian integration
+- Obsidian vault integration

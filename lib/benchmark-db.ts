@@ -1,49 +1,8 @@
 import type { BenchmarkSuite, Experiment } from "@/lib/types";
+import { STORE_NAMES, type StoreName, withStore } from "@/lib/local-db";
 
-const DATABASE_NAME = "ollama-chat-lab";
-const DATABASE_VERSION = 1;
-const EXPERIMENTS_STORE = "experiments";
-const SUITES_STORE = "suites";
-
-type StoreName = typeof EXPERIMENTS_STORE | typeof SUITES_STORE;
-
-function openDatabase() {
-  return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = window.indexedDB.open(
-      DATABASE_NAME,
-      DATABASE_VERSION,
-    );
-
-    request.onupgradeneeded = () => {
-      const database = request.result;
-      if (!database.objectStoreNames.contains(EXPERIMENTS_STORE)) {
-        database.createObjectStore(EXPERIMENTS_STORE, { keyPath: "id" });
-      }
-      if (!database.objectStoreNames.contains(SUITES_STORE)) {
-        database.createObjectStore(SUITES_STORE, { keyPath: "id" });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function withStore<T>(
-  storeName: StoreName,
-  mode: IDBTransactionMode,
-  run: (store: IDBObjectStore) => IDBRequest<T>,
-) {
-  const database = await openDatabase();
-
-  return new Promise<T>((resolve, reject) => {
-    const transaction = database.transaction(storeName, mode);
-    const request = run(transaction.objectStore(storeName));
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-    transaction.oncomplete = () => database.close();
-    transaction.onerror = () => reject(transaction.error);
-  });
-}
+const EXPERIMENTS_STORE = STORE_NAMES.experiments;
+const SUITES_STORE = STORE_NAMES.suites;
 
 async function getAll<T>(storeName: StoreName) {
   return withStore<T[]>(storeName, "readonly", (store) =>
