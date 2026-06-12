@@ -21,6 +21,7 @@ pnpm-debug.log*
 # misc
 .DS_Store
 *.pem
+/.playwright-cli/
 
 # typescript
 *.tsbuildinfo

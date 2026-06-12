@@ -2,7 +2,11 @@ import { useEffect, useRef } from "react";
 
 import { ChatInput } from "@/components/ChatInput";
 import { MessageBubble } from "@/components/MessageBubble";
-import type { StoredMessage, TextAttachment } from "@/lib/types";
+import type {
+  ContextPlan,
+  StoredMessage,
+  TextAttachment,
+} from "@/lib/types";
 
 type ChatWindowProps = {
   messages: StoredMessage[];
@@ -12,6 +16,7 @@ type ChatWindowProps = {
   error: string | null;
   attachments: TextAttachment[];
   attachmentError: string | null;
+  contextPlan: ContextPlan;
   onInputChange: (value: string) => void;
   onSubmit: () => void;
   onStop: () => void;
@@ -30,6 +35,7 @@ export function ChatWindow({
   error,
   attachments,
   attachmentError,
+  contextPlan,
   onInputChange,
   onSubmit,
   onStop,
@@ -155,6 +161,7 @@ export function ChatWindow({
         isGenerating={isLoading}
         attachments={attachments}
         attachmentError={attachmentError}
+        contextPlan={contextPlan}
         onChange={onInputChange}
         onSubmit={onSubmit}
         onStop={onStop}

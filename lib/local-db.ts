@@ -13,6 +13,13 @@ export function openDatabase() {
   return new Promise<IDBDatabase>((resolve, reject) => {
     const request = globalThis.indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
 
+    request.onblocked = () => {
+      reject(
+        new Error(
+          "The local database upgrade is blocked by another open app tab.",
+        ),
+      );
+    };
     request.onupgradeneeded = () => {
       const database = request.result;
       for (const storeName of Object.values(STORE_NAMES)) {
@@ -21,7 +28,11 @@ export function openDatabase() {
         }
       }
     };
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () => {
+      const database = request.result;
+      database.onversionchange = () => database.close();
+      resolve(database);
+    };
     request.onerror = () => reject(request.error);
   });
 }
@@ -36,9 +47,22 @@ export async function withStore<T>(
   return new Promise<T>((resolve, reject) => {
     const transaction = database.transaction(storeName, mode);
     const request = run(transaction.objectStore(storeName));
-    request.onsuccess = () => resolve(request.result);
+    let result: T;
+    request.onsuccess = () => {
+      result = request.result;
+    };
     request.onerror = () => reject(request.error);
-    transaction.oncomplete = () => database.close();
-    transaction.onerror = () => reject(transaction.error);
+    transaction.oncomplete = () => {
+      database.close();
+      resolve(result);
+    };
+    transaction.onabort = () => {
+      database.close();
+      reject(transaction.error ?? new Error("Local database transaction aborted."));
+    };
+    transaction.onerror = () => {
+      database.close();
+      reject(transaction.error);
+    };
   });
 }

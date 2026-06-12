@@ -26,6 +26,9 @@ keeping model inference on the local machine.
 - Edit a previous user message into a branched conversation
 - Render Markdown, tables, links, and copyable code blocks
 - Attach up to four local text or Markdown files per message
+- Estimate system, history, input, and attachment context usage before sending
+- Reserve 25% of the selected context for output and trim oldest turns safely
+- Compare estimated prompt tokens with Ollama's actual prompt token count
 - Export conversations as JSON or Markdown
 - Turn saved conversation prompts into a benchmark suite
 - Configure temperature, top-p, and context length
@@ -107,6 +110,26 @@ message creates an independent conversation without changing the source.
 Text attachments are read entirely in the browser and included in the model
 context. The app accepts `.txt`, `.md`, and `.markdown` files up to 256 KB each.
 Files are never uploaded to an external service.
+
+## Context Management
+
+Single-model chat uses 75% of the selected context length for input and reserves
+25% for the response. The system prompt, current message, and current
+attachments are always preserved. When history does not fit, the oldest
+user/assistant turns are omitted from the Ollama request while the full saved
+conversation remains unchanged.
+
+Token counts are local estimates. After generation, the response metadata shows
+Ollama's actual `prompt_eval_count` when available.
+
+## Architecture
+
+- `hooks/use-ollama-models.ts`: model discovery and connection state
+- `hooks/use-conversations.ts`: IndexedDB conversation lifecycle
+- `hooks/use-single-chat.ts`: context planning and single-model generation
+- `hooks/use-compare-chat.ts`: independent parallel comparison
+- `lib/benchmark-runner.ts`: sequential benchmark state transitions
+- `lib/context-planner.ts`: token estimation and turn-level trimming
 
 The current task rubrics cover general answers, summarization, code,
 translation, factual Q&A, and strict instruction following.

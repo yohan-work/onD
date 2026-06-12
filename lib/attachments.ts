@@ -34,7 +34,18 @@ export async function readTextAttachment(file: File): Promise<TextAttachment> {
 }
 
 export function estimateTokens(text: string) {
-  return Math.ceil(text.length / 4);
+  let cjkCharacters = 0;
+  let otherCharacters = 0;
+
+  for (const character of text) {
+    if (/[\p{Script=Han}\p{Script=Hangul}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(character)) {
+      cjkCharacters += 1;
+    } else {
+      otherCharacters += 1;
+    }
+  }
+
+  return cjkCharacters + Math.ceil(otherCharacters / 4);
 }
 
 export function buildAttachmentContext(attachments: TextAttachment[]) {

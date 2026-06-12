@@ -4,7 +4,8 @@ import {
   MAX_ATTACHMENTS,
   readTextAttachment,
 } from "@/lib/attachments";
-import type { TextAttachment } from "@/lib/types";
+import { ContextBudget } from "@/components/ContextBudget";
+import type { ContextPlan, TextAttachment } from "@/lib/types";
 
 type ChatInputProps = {
   value: string;
@@ -13,6 +14,7 @@ type ChatInputProps = {
   isGenerating?: boolean;
   attachments?: TextAttachment[];
   attachmentError?: string | null;
+  contextPlan?: ContextPlan;
   onChange: (value: string) => void;
   onSubmit: () => void;
   onStop?: () => void;
@@ -27,6 +29,7 @@ export function ChatInput({
   isGenerating = false,
   attachments = [],
   attachmentError = null,
+  contextPlan,
   onChange,
   onSubmit,
   onStop,
@@ -46,11 +49,15 @@ export function ChatInput({
     textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
   }, [value]);
 
-  const canSubmit = value.trim().length > 0 && !disabled;
+  const canSubmit =
+    value.trim().length > 0 &&
+    !disabled &&
+    !contextPlan?.isOverBudget;
 
   return (
     <div className="border-t border-[var(--line)] bg-[var(--panel)]/95 px-4 py-4 backdrop-blur-sm sm:px-6">
       <div className="mx-auto max-w-[860px]">
+        {contextPlan ? <ContextBudget plan={contextPlan} /> : null}
         {attachments.length > 0 ? (
           <div className="mb-2 flex flex-wrap gap-2">
             {attachments.map((attachment) => (

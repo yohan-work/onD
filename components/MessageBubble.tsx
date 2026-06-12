@@ -79,6 +79,18 @@ export function MessageBubble({
             ) : null}
           </div>
         ) : null}
+        {message.contextUsage ? (
+          <p className="mt-1.5 font-mono text-[9px] text-[var(--ink-muted)]">
+            context ~
+            {message.contextUsage.estimatedInputTokens.toLocaleString()}
+            {message.contextUsage.actualPromptTokens !== null
+              ? ` · actual ${message.contextUsage.actualPromptTokens.toLocaleString()}`
+              : ""}
+            {message.contextUsage.excludedTurns > 0
+              ? ` · ${message.contextUsage.excludedTurns} turns excluded`
+              : ""}
+          </p>
+        ) : null}
       </div>
     </article>
   );

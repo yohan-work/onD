@@ -61,10 +61,10 @@ export function Header({
               }`}
             >
               {nextMode === "single"
-                ? "채팅"
+                ? "Chat"
                 : nextMode === "compare"
-                  ? "모델 비교"
-                  : "성능 평가"}
+                  ? "Multi Agent"
+                  : "Benchmark"}
             </button>
           ))}
         </div>

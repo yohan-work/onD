@@ -21,6 +21,30 @@ export type StoredMessage = ChatMessage & {
   status: MessageStatus;
   metrics?: GenerationMetrics | null;
   attachments?: TextAttachment[];
+  contextUsage?: ContextUsageSnapshot;
+};
+
+export type TokenBreakdown = {
+  system: number;
+  history: number;
+  input: number;
+  attachments: number;
+  overhead: number;
+};
+
+export type ContextUsageSnapshot = {
+  contextLimit: number;
+  inputBudget: number;
+  estimatedInputTokens: number;
+  excludedTurns: number;
+  actualPromptTokens: number | null;
+  breakdown: TokenBreakdown;
+};
+
+export type ContextPlan = ContextUsageSnapshot & {
+  messages: ChatMessage[];
+  isOverBudget: boolean;
+  reason: string | null;
 };
 
 export type ConversationBranch = {

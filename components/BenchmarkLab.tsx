@@ -14,15 +14,19 @@ import {
   type BenchmarkExport,
 } from "@/lib/benchmark-db";
 import { createStarterSuite } from "@/lib/benchmark-defaults";
+import {
+  createExperiment,
+  modelStats,
+  parseStructuredJson,
+} from "@/lib/benchmark-engine";
+import { runBenchmarkExperiment } from "@/lib/benchmark-runner";
 import { streamChat } from "@/lib/chat-stream";
 import {
   CATEGORY_LABELS,
   RUBRICS,
-  weightedScore,
 } from "@/lib/rubrics";
 import type {
   BenchmarkCase,
-  BenchmarkRun,
   BenchmarkSuite,
   ChatSettings,
   Experiment,
@@ -47,18 +51,6 @@ const TASK_CATEGORIES = Object.keys(
   CATEGORY_LABELS,
 ) as TaskCategory[];
 
-function shuffle<T>(values: T[]) {
-  const result = [...values];
-  for (let index = result.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [result[index], result[swapIndex]] = [
-      result[swapIndex],
-      result[index],
-    ];
-  }
-  return result;
-}
-
 function formatDuration(milliseconds: number | null) {
   return milliseconds === null ? "--" : `${(milliseconds / 1000).toFixed(2)}s`;
 }
@@ -68,145 +60,6 @@ function formatBytes(bytes: number | undefined) {
     return "--";
   }
   return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
-}
-
-function parseStructuredJson<T>(content: string): T {
-  const trimmed = content.trim();
-  const withoutFence = trimmed.startsWith("```")
-    ? trimmed
-        .replace(/^```(?:json)?\s*/i, "")
-        .replace(/\s*```$/, "")
-        .trim()
-    : trimmed;
-
-  return JSON.parse(withoutFence) as T;
-}
-
-function createExperiment(
-  suite: BenchmarkSuite,
-  models: string[],
-  judgeModel: string,
-  settings: ChatSettings,
-): Experiment {
-  const timestamp = new Date().toISOString();
-
-  return {
-    id: crypto.randomUUID(),
-    name: `${suite.name} · ${new Date().toLocaleString()}`,
-    suiteId: suite.id,
-    suiteName: suite.name,
-    models,
-    judgeModel,
-    settings: {
-      temperature: settings.temperature,
-      top_p: settings.top_p,
-      num_ctx: settings.num_ctx,
-      systemPrompt: settings.systemPrompt,
-    },
-    status: "draft",
-    currentRun: 0,
-    totalRuns: suite.cases.length * models.length,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-    results: suite.cases.map((testCase) => {
-      const runs: BenchmarkRun[] = models.map((model) => ({
-        id: crypto.randomUUID(),
-        caseId: testCase.id,
-        model,
-        content: "",
-        status: "pending",
-        error: null,
-        metrics: null,
-      }));
-
-      return {
-        caseId: testCase.id,
-        prompt: testCase.prompt,
-        category: testCase.category,
-        runs,
-        blindOrder: shuffle(runs.map((run) => run.id)),
-        humanEvaluation: null,
-        judgeEvaluation: null,
-      };
-    }),
-  };
-}
-
-function updateRun(
-  experiment: Experiment,
-  runId: string,
-  updater: (run: BenchmarkRun) => BenchmarkRun,
-) {
-  return {
-    ...experiment,
-    updatedAt: new Date().toISOString(),
-    results: experiment.results.map((result) => ({
-      ...result,
-      runs: result.runs.map((run) =>
-        run.id === runId ? updater(run) : run,
-      ),
-    })),
-  };
-}
-
-function modelStats(experiment: Experiment) {
-  return experiment.models.map((model) => {
-    const entries = experiment.results.flatMap((result) => {
-      const run = result.runs.find((candidate) => candidate.model === model);
-      return run ? [{ result, run }] : [];
-    });
-    const completed = entries.filter(
-      ({ run }) => run.status === "completed",
-    );
-    const humanScores = entries.flatMap(({ result, run }) => {
-      const score = weightedScore(
-        result.category,
-        result.humanEvaluation?.scores[run.id],
-      );
-      return score === null ? [] : [score];
-    });
-    const judgeScores = entries.flatMap(({ result }) => {
-      const scores = result.judgeEvaluation?.scores[model];
-      const score = weightedScore(result.category, scores);
-      return score === null ? [] : [score];
-    });
-    const wins = entries.filter(
-      ({ result, run }) =>
-        result.humanEvaluation?.winnerRunId === run.id,
-    ).length;
-    const speeds = completed.flatMap(({ run }) =>
-      run.metrics?.tokensPerSecond === null ||
-      run.metrics?.tokensPerSecond === undefined
-        ? []
-        : [run.metrics.tokensPerSecond],
-    );
-    const firstTokens = completed.flatMap(({ run }) =>
-      run.metrics?.firstTokenTime === null ||
-      run.metrics?.firstTokenTime === undefined
-        ? []
-        : [run.metrics.firstTokenTime],
-    );
-
-    const average = (values: number[]) =>
-      values.length
-        ? values.reduce((total, value) => total + value, 0) /
-          values.length
-        : null;
-
-    return {
-      model,
-      humanScore: average(humanScores),
-      judgeScore: average(judgeScores),
-      winRate: entries.length ? (wins / entries.length) * 100 : 0,
-      tokensPerSecond: average(speeds),
-      firstTokenTime: average(firstTokens),
-      errorRate: entries.length
-        ? (entries.filter(({ run }) => run.status === "error").length /
-            entries.length) *
-          100
-        : 0,
-    };
-  });
 }
 
 export function BenchmarkLab({
@@ -291,8 +144,11 @@ export function BenchmarkLab({
   }, [refreshData]);
 
   useEffect(() => {
-    setTargetModels((current) =>
-      {
+    let active = true;
+    async function synchronizeTargetModels() {
+      await Promise.resolve();
+      if (!active) return;
+      setTargetModels((current) => {
         const available = models
           .map((model) => model.name)
           .filter((model) => model !== judgeModel);
@@ -313,8 +169,12 @@ export function BenchmarkLab({
           0,
           Math.min(2, available.length),
         );
-      },
-    );
+      });
+    }
+    void synchronizeTargetModels();
+    return () => {
+      active = false;
+    };
   }, [judgeModel, models, settings.compareModels]);
 
   const commitExperiment = useCallback(async (experiment: Experiment) => {
@@ -330,134 +190,36 @@ export function BenchmarkLab({
 
   const runExperiment = useCallback(
     async (initialExperiment: Experiment) => {
-      let working: Experiment = {
-        ...initialExperiment,
-        status: "running",
-        updatedAt: new Date().toISOString(),
-      };
       pauseRequestedRef.current = false;
       cancelRequestedRef.current = false;
       setIsRunning(true);
       setMessage(null);
-      await commitExperiment(working);
-
-      for (const model of working.models) {
-        for (const result of working.results) {
-          const run = result.runs.find(
-            (candidate) => candidate.model === model,
-          );
-          if (!run || run.status === "completed") {
-            continue;
-          }
-
-          if (pauseRequestedRef.current) {
-            working = { ...working, status: "paused" };
-            await commitExperiment(working);
-            setIsRunning(false);
-            return;
-          }
-
-          if (cancelRequestedRef.current) {
-            working = { ...working, status: "cancelled" };
-            await commitExperiment(working);
-            setIsRunning(false);
-            return;
-          }
-
-          working = updateRun(working, run.id, (current) => ({
-            ...current,
-            content: "",
-            status: "running",
-            error: null,
-            metrics: null,
-          }));
-          await commitExperiment(working);
-
-          let content = "";
-          const controller = new AbortController();
+      const outcome = await runBenchmarkExperiment(initialExperiment, {
+        commit: commitExperiment,
+        onStream: (streamed) => {
+          setExperiments((current) => {
+            const next = current.map((experiment) =>
+              experiment.id === streamed.id ? streamed : experiment,
+            );
+            experimentsRef.current = next;
+            return next;
+          });
+        },
+        onController: (controller) => {
           abortControllerRef.current = controller;
-
-          try {
-            const streamResult = await streamChat({
-              model,
-              messages: [
-                ...(working.settings.systemPrompt.trim()
-                  ? [
-                      {
-                        role: "system" as const,
-                        content: working.settings.systemPrompt.trim(),
-                      },
-                    ]
-                  : []),
-                { role: "user", content: result.prompt },
-              ],
-              settings: working.settings,
-              signal: controller.signal,
-              onContent: (chunk) => {
-                content += chunk;
-                setExperiments((current) => {
-                  const next = current.map((experiment) =>
-                    experiment.id === working.id
-                      ? updateRun(experiment, run.id, (currentRun) => ({
-                          ...currentRun,
-                          content,
-                        }))
-                      : experiment,
-                  );
-                  experimentsRef.current = next;
-                  return next;
-                });
-              },
-            });
-
-            working = updateRun(working, run.id, (current) => ({
-              ...current,
-              content,
-              status: "completed",
-              metrics: streamResult.metrics,
-            }));
-          } catch (error) {
-            if (cancelRequestedRef.current) {
-              working = updateRun(working, run.id, (current) => ({
-                ...current,
-                content,
-                status: "pending",
-              }));
-            } else {
-              working = updateRun(working, run.id, (current) => ({
-                ...current,
-                content,
-                status: "error",
-                error:
-                  error instanceof Error
-                    ? error.message
-                    : "Model execution failed.",
-              }));
-            }
-          }
-
-          working = {
-            ...working,
-            currentRun: working.currentRun + 1,
-          };
-          await commitExperiment(working);
-        }
-      }
-
-      working = {
-        ...working,
-        status: cancelRequestedRef.current ? "cancelled" : "completed",
-        updatedAt: new Date().toISOString(),
-      };
-      await commitExperiment(working);
-      abortControllerRef.current = null;
+        },
+        shouldPause: () => pauseRequestedRef.current,
+        shouldCancel: () => cancelRequestedRef.current,
+      });
       setIsRunning(false);
       setMessage(
-        working.status === "completed"
+        outcome.status === "completed"
           ? "Benchmark completed. Review the blind results."
-          : "Benchmark cancelled.",
+          : outcome.status === "paused"
+            ? "Benchmark paused."
+            : "Benchmark cancelled.",
       );
-      if (working.status === "completed") {
+      if (outcome.status === "completed") {
         setTab("review");
       }
     },
