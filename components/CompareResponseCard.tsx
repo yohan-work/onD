@@ -1,4 +1,5 @@
 import type { ModelResponse } from "@/lib/types";
+import { MarkdownContent } from "@/components/MarkdownContent";
 
 type CompareResponseCardProps = {
   response: ModelResponse;
@@ -54,8 +55,8 @@ export function CompareResponseCard({
 
       <div className="flex flex-1 flex-col p-4">
         {response.content ? (
-          <div className="text-sm leading-7 whitespace-pre-wrap break-words text-[var(--ink)]">
-            {response.content}
+          <div className="text-sm leading-7 break-words text-[var(--ink)]">
+            <MarkdownContent content={response.content} />
           </div>
         ) : isActive ? (
           <span

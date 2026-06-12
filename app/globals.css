@@ -92,3 +92,130 @@ textarea {
 .thinking-dot:nth-child(3) {
   animation-delay: 280ms;
 }
+
+.markdown-content {
+  min-width: 0;
+}
+
+.markdown-content > :first-child {
+  margin-top: 0;
+}
+
+.markdown-content > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content p,
+.markdown-content ul,
+.markdown-content ol,
+.markdown-content blockquote,
+.markdown-content table,
+.markdown-content .code-block {
+  margin: 0.75rem 0;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.4rem;
+}
+
+.markdown-content ul {
+  list-style: disc;
+}
+
+.markdown-content ol {
+  list-style: decimal;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin: 1.25rem 0 0.55rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.markdown-content h1 {
+  font-size: 1.35rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.15rem;
+}
+
+.markdown-content h3 {
+  font-size: 1rem;
+}
+
+.markdown-content a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.markdown-content blockquote {
+  border-left: 3px solid var(--line);
+  color: var(--ink-secondary);
+  padding-left: 0.9rem;
+}
+
+.markdown-content :not(pre) > code {
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  background: var(--panel-muted);
+  padding: 0.1rem 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.86em;
+}
+
+.markdown-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid var(--line);
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: var(--panel-muted);
+}
+
+.code-block {
+  overflow: hidden;
+  border: 1px solid #2d332f;
+  border-radius: 0.75rem;
+  background: #171b18;
+  color: #e8eee9;
+}
+
+.code-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #303832;
+  padding: 0.45rem 0.75rem;
+  color: #9ba89f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.code-block__header button {
+  color: #c7d8cc;
+}
+
+.code-block pre {
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.9rem 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.65;
+}

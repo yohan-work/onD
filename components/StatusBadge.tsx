@@ -31,11 +31,11 @@ export function StatusBadge({
 
   return (
     <span
-      className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/75 px-3 py-1.5 text-xs font-medium text-[var(--ink-secondary)]"
+      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white/75 px-2 py-1 text-[10px] font-medium text-[var(--ink-secondary)]"
       title={content.label}
     >
       <span
-        className={`h-2 w-2 rounded-full ${content.dotClassName} ${
+        className={`h-1.5 w-1.5 rounded-full ${content.dotClassName} ${
           status === "checking" ? "animate-pulse" : ""
         }`}
       />

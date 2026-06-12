@@ -22,12 +22,12 @@ export function MultiModelSelector({
 
   return (
     <fieldset disabled={disabled} className="min-w-0">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <legend className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-secondary)]">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <legend className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-secondary)]">
           Compare models
         </legend>
         <span
-          className={`font-mono text-[10px] ${
+          className={`font-mono text-[9px] ${
             selectionIsValid
               ? "text-[var(--accent)]"
               : "text-[var(--error)]"
@@ -37,7 +37,7 @@ export function MultiModelSelector({
         </span>
       </div>
 
-      <div className="max-h-52 space-y-1 overflow-y-auto rounded-xl border border-[var(--line)] bg-white p-1.5">
+      <div className="max-h-48 space-y-0.5 overflow-y-auto rounded-lg border border-[var(--line)] bg-white p-1">
         {models.map((model) => {
           const isSelected = selectedModels.includes(model.name);
           const selectionFull =
@@ -46,7 +46,7 @@ export function MultiModelSelector({
           return (
             <label
               key={model.name}
-              className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs transition ${
+              className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-[11px] transition ${
                 selectionFull
                   ? "cursor-not-allowed text-[var(--ink-muted)]"
                   : "cursor-pointer hover:bg-[var(--panel-muted)]"
@@ -63,7 +63,7 @@ export function MultiModelSelector({
                       : selectedModels.filter((name) => name !== model.name),
                   );
                 }}
-                className="h-3.5 w-3.5 accent-[var(--accent)]"
+                className="h-3 w-3 accent-[var(--accent)]"
               />
               <span className="min-w-0 truncate font-mono">{model.name}</span>
             </label>
@@ -72,7 +72,7 @@ export function MultiModelSelector({
       </div>
 
       <p
-        className={`mt-2 text-[11px] leading-4 ${
+        className={`mt-1.5 text-[10px] leading-4 ${
           selectionIsValid
             ? "text-[var(--ink-muted)]"
             : "text-[var(--error)]"

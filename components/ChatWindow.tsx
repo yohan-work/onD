@@ -2,16 +2,24 @@ import { useEffect, useRef } from "react";
 
 import { ChatInput } from "@/components/ChatInput";
 import { MessageBubble } from "@/components/MessageBubble";
-import type { ChatMessage } from "@/lib/types";
+import type { StoredMessage, TextAttachment } from "@/lib/types";
 
 type ChatWindowProps = {
-  messages: ChatMessage[];
+  messages: StoredMessage[];
   input: string;
   selectedModel: string;
   isLoading: boolean;
   error: string | null;
+  attachments: TextAttachment[];
+  attachmentError: string | null;
   onInputChange: (value: string) => void;
   onSubmit: () => void;
+  onStop: () => void;
+  onRetry: (messageId: string) => void;
+  onContinue: (messageId: string) => void;
+  onBranch: (messageId: string) => void;
+  onAttachmentsChange: (attachments: TextAttachment[]) => void;
+  onAttachmentError: (message: string | null) => void;
 };
 
 export function ChatWindow({
@@ -20,8 +28,16 @@ export function ChatWindow({
   selectedModel,
   isLoading,
   error,
+  attachments,
+  attachmentError,
   onInputChange,
   onSubmit,
+  onStop,
+  onRetry,
+  onContinue,
+  onBranch,
+  onAttachmentsChange,
+  onAttachmentError,
 }: ChatWindowProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const shouldFollowStreamRef = useRef(true);
@@ -96,6 +112,22 @@ export function ChatWindow({
                   key={`${message.role}-${index}`}
                   message={message}
                   isStreaming={isLoading && index === messages.length - 1}
+                  onCopy={() => void navigator.clipboard.writeText(message.content)}
+                  onRetry={
+                    message.role === "assistant" && !isLoading
+                      ? () => onRetry(message.id)
+                      : undefined
+                  }
+                  onContinue={
+                    message.role === "assistant" && !isLoading
+                      ? () => onContinue(message.id)
+                      : undefined
+                  }
+                  onBranch={
+                    message.role === "user" && !isLoading
+                      ? () => onBranch(message.id)
+                      : undefined
+                  }
                 />
               ))}
             </div>
@@ -120,8 +152,14 @@ export function ChatWindow({
             : "Select a model to start..."
         }
         disabled={isLoading || !selectedModel}
+        isGenerating={isLoading}
+        attachments={attachments}
+        attachmentError={attachmentError}
         onChange={onInputChange}
         onSubmit={onSubmit}
+        onStop={onStop}
+        onAttachmentsChange={onAttachmentsChange}
+        onAttachmentError={onAttachmentError}
       />
     </main>
   );

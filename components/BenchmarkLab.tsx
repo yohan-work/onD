@@ -834,10 +834,10 @@ export function BenchmarkLab({
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--accent)]">
               Ollama 로컬 모델 평가
             </p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-[-0.035em]">
+            <h2 className="mt-1 text-xl font-semibold tracking-[-0.035em]">
               모델 성능 평가
             </h2>
-            <p className="mt-1 text-sm text-[var(--ink-secondary)]">
+            <p className="mt-1 text-[10px] text-[var(--ink-secondary)]">
               같은 질문으로 여러 모델의 답변 품질과 속도를 비교합니다.
             </p>
           </div>
@@ -847,7 +847,7 @@ export function BenchmarkLab({
                 key={nextTab}
                 type="button"
                 onClick={() => setTab(nextTab)}
-                className={`rounded-lg px-4 py-2 text-xs font-semibold capitalize transition ${
+                className={`rounded-lg px-4 py-2 text-[10px] font-semibold capitalize transition ${
                   tab === nextTab
                     ? "bg-[var(--ink)] text-white"
                     : "text-[var(--ink-secondary)] hover:bg-[var(--panel-muted)]"
@@ -864,7 +864,7 @@ export function BenchmarkLab({
         </div>
 
         {message ? (
-          <div className="mb-5 rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-sm text-[var(--ink-secondary)]">
+          <div className="mb-5 rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[10px] text-[var(--ink-secondary)]">
             {message}
           </div>
         ) : null}
@@ -901,8 +901,8 @@ export function BenchmarkLab({
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
                     STEP 1
                   </p>
-                  <h3 className="mt-1 font-semibold">어떤 질문으로 평가할까요?</h3>
-                  <p className="text-xs text-[var(--ink-muted)]">
+                  <h3 className="mt-1 text-[12px] font-semibold">어떤 질문으로 평가할까요?</h3>
+                  <p className="text-[10px] text-[var(--ink-muted)]">
                     처음에는 준비된 기본 테스트를 선택하면 됩니다.
                   </p>
                 </div>
@@ -911,7 +911,7 @@ export function BenchmarkLab({
               <select
                 value={selectedSuiteId}
                 onChange={(event) => setSelectedSuiteId(event.target.value)}
-                className="mt-4 h-11 w-full rounded-xl border border-[var(--line)] bg-white px-3 text-sm outline-none"
+                className="mt-4 h-9 w-full rounded-xl border border-[var(--line)] bg-white px-3 text-[10px] outline-none"
               >
                 {suites.map((suite) => (
                   <option key={suite.id} value={suite.id}>
@@ -922,8 +922,8 @@ export function BenchmarkLab({
 
               {selectedSuite ? (
                 <div className="mt-4 rounded-xl bg-[var(--panel-muted)]/60 p-4">
-                  <p className="text-sm font-medium">{selectedSuite.name}</p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--ink-secondary)]">
+                  <p className="text-[10px] font-medium">{selectedSuite.name}</p>
+                  <p className="mt-1 text-[10px] leading-5 text-[var(--ink-secondary)]">
                     {selectedSuite.description ||
                       "저장된 질문으로 모델 품질과 속도를 비교합니다."}
                   </p>
@@ -948,7 +948,7 @@ export function BenchmarkLab({
               <button
                 type="button"
                 onClick={() => setShowSuiteEditor((current) => !current)}
-                className="mt-4 text-xs font-medium text-[var(--accent)]"
+                className="mt-4 text-[10px] font-medium text-[var(--accent)]"
               >
                 {showSuiteEditor
                   ? "테스트셋 편집기 닫기"
@@ -961,7 +961,7 @@ export function BenchmarkLab({
                     <button
                       type="button"
                       onClick={createSuite}
-                      className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs font-medium"
+                      className="rounded-lg border border-[var(--line)] px-3 py-2 text-[10px] font-medium"
                     >
                       새 테스트셋
                     </button>
@@ -969,7 +969,7 @@ export function BenchmarkLab({
                       type="button"
                       disabled={suites.length <= 1}
                       onClick={removeSelectedSuite}
-                      className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs text-[var(--error)] disabled:opacity-40"
+                      className="rounded-lg border border-[var(--line)] px-3 py-2 text-[10px] text-[var(--error)] disabled:opacity-40"
                     >
                       삭제
                     </button>
@@ -982,7 +982,7 @@ export function BenchmarkLab({
                         name: event.target.value,
                       }))
                     }
-                    className="h-11 w-full rounded-xl border border-[var(--line)] px-3 text-sm outline-none focus:border-[var(--accent)]"
+                    className="h-9 w-full rounded-xl border border-[var(--line)] px-3 text-[10px] outline-none focus:border-[var(--accent)]"
                     aria-label="Suite name"
                   />
                   <textarea
@@ -995,7 +995,7 @@ export function BenchmarkLab({
                     }
                     rows={2}
                     placeholder="Describe the purpose of this benchmark..."
-                    className="w-full rounded-xl border border-[var(--line)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+                    className="w-full rounded-xl border border-[var(--line)] px-3 py-2 text-[10px] outline-none focus:border-[var(--accent)]"
                   />
 
                   <div className="space-y-3">
@@ -1020,7 +1020,7 @@ export function BenchmarkLab({
                                 ),
                               }))
                             }
-                            className="h-9 rounded-lg border border-[var(--line)] bg-white px-2.5 text-xs"
+                            className="h-9 rounded-lg border border-[var(--line)] bg-white px-2.5 text-[10px]"
                             aria-label={`Case ${caseIndex + 1} title`}
                           />
                           <select
@@ -1039,7 +1039,7 @@ export function BenchmarkLab({
                                 ),
                               }))
                             }
-                            className="h-9 rounded-lg border border-[var(--line)] bg-white px-2 text-xs"
+                            className="h-9 rounded-lg border border-[var(--line)] bg-white px-2 text-[10px]"
                           >
                             {TASK_CATEGORIES.map((category) => (
                               <option key={category} value={category}>
@@ -1058,7 +1058,7 @@ export function BenchmarkLab({
                                 ),
                               }))
                             }
-                            className="h-9 px-2 text-xs text-[var(--error)]"
+                            className="h-9 px-2 text-[10px] text-[var(--error)]"
                           >
                             Remove
                           </button>
@@ -1079,7 +1079,7 @@ export function BenchmarkLab({
                             }))
                           }
                           rows={3}
-                          className="mt-2 w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm leading-5"
+                          className="mt-2 w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[10px] leading-5"
                           aria-label={`Case ${caseIndex + 1} prompt`}
                         />
                       </div>
@@ -1101,14 +1101,14 @@ export function BenchmarkLab({
                           cases: [...suite.cases, testCase],
                         }));
                       }}
-                      className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs font-medium"
+                      className="rounded-lg border border-[var(--line)] px-3 py-2 text-[10px] font-medium"
                     >
                       질문 추가
                     </button>
                     <button
                       type="button"
                       onClick={persistSelectedSuite}
-                      className="rounded-lg bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white"
+                      className="rounded-lg bg-[var(--accent)] px-4 py-2 text-[10px] font-semibold text-white"
                     >
                       테스트셋 저장
                     </button>
@@ -1122,13 +1122,13 @@ export function BenchmarkLab({
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
                   STEP 2
                 </p>
-                <h3 className="mt-1 font-semibold">비교할 모델을 선택하세요</h3>
-                <p className="mt-1 text-xs text-[var(--ink-muted)]">
+                <h3 className="mt-1 text-[12px] font-semibold">비교할 모델을 선택하세요</h3>
+                <p className="mt-1 text-[10px] text-[var(--ink-muted)]">
                   기본으로 2개가 선택됩니다. 모델은 한 번에 하나씩 실행됩니다.
                 </p>
 
                 <fieldset className="mt-5">
-                  <legend className="text-xs font-medium">
+                  <legend className="text-[10px] font-medium">
                     평가 대상 모델 ({targetModels.length}개 선택)
                   </legend>
                   <div className="mt-2 max-h-56 space-y-1 overflow-y-auto rounded-xl border border-[var(--line)] p-1.5">
@@ -1137,7 +1137,7 @@ export function BenchmarkLab({
                       .map((model) => (
                         <label
                           key={model.name}
-                          className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs hover:bg-[var(--panel-muted)]"
+                          className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-[10px] hover:bg-[var(--panel-muted)]"
                         >
                           <input
                             type="checkbox"
@@ -1164,21 +1164,21 @@ export function BenchmarkLab({
                 <button
                   type="button"
                   onClick={() => setShowAdvanced((current) => !current)}
-                  className="mt-4 text-xs font-medium text-[var(--accent)]"
+                  className="mt-4 text-[10px] font-medium text-[var(--accent)]"
                 >
                   {showAdvanced ? "고급 설정 닫기" : "Judge와 고급 설정 보기"}
                 </button>
 
                 {showAdvanced ? (
                   <div className="mt-4 rounded-xl border border-[var(--line)] p-3">
-                    <label className="block text-xs font-medium">
+                    <label className="block text-[10px] font-medium">
                       자동 평가용 Judge 모델 (선택)
                       <select
                         value={judgeModel}
                         onChange={(event) =>
                           onJudgeModelChange(event.target.value)
                         }
-                        className="mt-2 h-10 w-full rounded-xl border border-[var(--line)] bg-white px-3 font-mono text-xs"
+                        className="mt-2 h-8 w-full rounded-xl border border-[var(--line)] bg-white px-3 font-mono text-[10px]"
                       >
                         <option value="">사용 안 함</option>
                         {models.map((model) => (
@@ -1200,8 +1200,8 @@ export function BenchmarkLab({
                 ) : null}
 
                 <div className="mt-5 rounded-xl bg-[var(--panel-muted)] p-4">
-                  <p className="text-xs font-semibold">실행 요약</p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--ink-secondary)]">
+                  <p className="text-[10px] font-semibold">실행 요약</p>
+                  <p className="mt-1 text-[10px] leading-5 text-[var(--ink-secondary)]">
                     질문 {selectedSuite?.cases.length ?? 0}개 × 모델{" "}
                     {targetModels.length}개 = 총 {estimatedRuns}번 실행
                   </p>
@@ -1214,16 +1214,16 @@ export function BenchmarkLab({
                     !canRun
                   }
                   onClick={startBenchmark}
-                  className="mt-5 h-11 w-full rounded-xl bg-[var(--ink)] text-sm font-semibold text-white transition hover:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35"
+                  className="mt-5 h-9 w-full rounded-xl bg-[var(--ink)] text-[10px] font-semibold text-white transition hover:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   {isRunning ? "평가 실행 중..." : "모델 성능 평가 시작"}
                 </button>
                 {!canRun ? (
-                  <p className="mt-2 text-center text-[11px] text-[var(--error)]">
+                  <p className="mt-2 text-center text-[10px] text-[var(--error)]">
                     질문이 있는 테스트셋과 모델 2개 이상이 필요합니다.
                   </p>
                 ) : (
-                  <p className="mt-2 text-center text-[11px] text-[var(--ink-muted)]">
+                  <p className="mt-2 text-center text-[10px] text-[var(--ink-muted)]">
                     완료되면 자동으로 답변 평가 화면으로 이동합니다.
                   </p>
                 )}
@@ -1237,11 +1237,11 @@ export function BenchmarkLab({
                   <button
                     type="button"
                     onClick={handleExport}
-                    className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs"
+                    className="rounded-lg border border-[var(--line)] px-3 py-2 text-[10px]"
                   >
                     Export JSON
                   </button>
-                  <label className="cursor-pointer rounded-lg border border-[var(--line)] px-3 py-2 text-xs">
+                  <label className="cursor-pointer rounded-lg border border-[var(--line)] px-3 py-2 text-[10px]">
                     Import JSON
                     <input
                       type="file"
@@ -1328,7 +1328,7 @@ function MetricPill({
       <p className="text-[9px] uppercase tracking-[0.1em] text-[var(--ink-muted)]">
         {label}
       </p>
-      <p className="mt-0.5 font-mono text-xs">{value}</p>
+      <p className="mt-0.5 font-mono text-[10px]">{value}</p>
     </div>
   );
 }
@@ -1347,7 +1347,7 @@ function GuideStep({
   return (
     <div className="flex gap-3">
       <div
-        className={`grid h-8 w-8 shrink-0 place-items-center rounded-full font-mono text-xs font-bold ${
+        className={`grid h-8 w-8 shrink-0 place-items-center rounded-full font-mono text-[10px] font-bold ${
           complete
             ? "bg-[var(--accent)] text-white"
             : "border border-[var(--accent)]/30 bg-white text-[var(--accent)]"
@@ -1356,8 +1356,8 @@ function GuideStep({
         {complete ? "✓" : number}
       </div>
       <div>
-        <p className="text-sm font-semibold">{title}</p>
-        <p className="mt-0.5 text-xs leading-5 text-[var(--ink-secondary)]">
+        <p className="text-[10px] font-semibold">{title}</p>
+        <p className="mt-0.5 text-[10px] leading-5 text-[var(--ink-secondary)]">
           {description}
         </p>
       </div>
@@ -1369,14 +1369,14 @@ function RuntimePanel({ models }: { models: RuntimeModel[] }) {
   return (
     <section className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Ollama runtime</h3>
+        <h3 className="text-[12px] font-semibold">Ollama runtime</h3>
         <span className="font-mono text-[10px] text-[var(--ink-muted)]">
           {models.length} LOADED
         </span>
       </div>
       <div className="mt-3 space-y-2">
         {models.length === 0 ? (
-          <p className="text-xs text-[var(--ink-muted)]">
+          <p className="text-[10px] text-[var(--ink-muted)]">
             No model is currently loaded in memory.
           </p>
         ) : (
@@ -1385,7 +1385,7 @@ function RuntimePanel({ models }: { models: RuntimeModel[] }) {
               key={model.name}
               className="rounded-xl border border-[var(--line)] px-3 py-2"
             >
-              <p className="truncate font-mono text-xs">{model.name}</p>
+              <p className="truncate font-mono text-[10px]">{model.name}</p>
               <p className="mt-1 text-[10px] text-[var(--ink-muted)]">
                 VRAM {formatBytes(model.sizeVram)} · ctx{" "}
                 {model.contextLength?.toLocaleString() ?? "--"} ·{" "}
@@ -1440,7 +1440,7 @@ function ReviewPanel({
 }: ReviewPanelProps) {
   if (!selectedExperiment || !selectedResult) {
     return (
-      <div className="rounded-2xl border border-[var(--line)] bg-white p-10 text-center text-sm text-[var(--ink-muted)]">
+      <div className="rounded-2xl border border-[var(--line)] bg-white p-10 text-center text-[10px] text-[var(--ink-muted)]">
         먼저 실행 설정에서 모델 성능 평가를 시작하세요.
       </div>
     );
@@ -1477,10 +1477,10 @@ function ReviewPanel({
     <div className="space-y-5">
       <section className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm">
         <div className="mb-5 rounded-xl bg-[var(--accent-soft)] p-4">
-          <p className="text-sm font-semibold text-[var(--accent)]">
+          <p className="text-[10px] font-semibold text-[var(--accent)]">
             답변 평가 방법
           </p>
-          <ol className="mt-2 grid gap-2 text-xs leading-5 text-[var(--ink-secondary)] sm:grid-cols-3">
+          <ol className="mt-2 grid gap-2 text-[10px] leading-5 text-[var(--ink-secondary)] sm:grid-cols-3">
             <li><strong>1.</strong> 각 답변의 항목별 점수를 선택합니다.</li>
             <li><strong>2.</strong> 가장 좋은 답변 하나를 선택합니다.</li>
             <li><strong>3.</strong> 평가 완료를 눌러 모델명을 확인합니다.</li>
@@ -1491,7 +1491,7 @@ function ReviewPanel({
             <select
               value={selectedExperimentId}
               onChange={(event) => onExperimentChange(event.target.value)}
-              className="max-w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm font-semibold"
+              className="max-w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[10px] font-semibold"
             >
               {experiments.map((experiment) => (
                 <option key={experiment.id} value={experiment.id}>
@@ -1499,7 +1499,7 @@ function ReviewPanel({
                 </option>
               ))}
             </select>
-            <p className="mt-2 text-xs text-[var(--ink-muted)]">
+            <p className="mt-2 text-[10px] text-[var(--ink-muted)]">
               상태: {selectedExperiment.status} · 실행{" "}
               {selectedExperiment.currentRun}/{selectedExperiment.totalRuns}
             </p>
@@ -1510,14 +1510,14 @@ function ReviewPanel({
                 <button
                   type="button"
                   onClick={onPause}
-                  className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs"
+                  className="rounded-lg border border-[var(--line)] px-3 py-2 text-[10px]"
                 >
                   잠시 멈춤
                 </button>
                 <button
                   type="button"
                   onClick={onCancel}
-                  className="rounded-lg border border-[var(--error)]/30 px-3 py-2 text-xs text-[var(--error)]"
+                  className="rounded-lg border border-[var(--error)]/30 px-3 py-2 text-[10px] text-[var(--error)]"
                 >
                   실행 취소
                 </button>
@@ -1526,7 +1526,7 @@ function ReviewPanel({
               <button
                 type="button"
                 onClick={onResume}
-                className="rounded-lg bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-white"
+                className="rounded-lg bg-[var(--accent)] px-3 py-2 text-[10px] font-semibold text-white"
               >
                 이어서 실행 / 실패 재시도
               </button>
@@ -1535,7 +1535,7 @@ function ReviewPanel({
               type="button"
               disabled={isJudging || selectedExperiment.status !== "completed"}
               onClick={onJudgeAll}
-              className="rounded-lg border border-[var(--accent)]/30 px-3 py-2 text-xs text-[var(--accent)] disabled:opacity-40"
+              className="rounded-lg border border-[var(--accent)]/30 px-3 py-2 text-[10px] text-[var(--accent)] disabled:opacity-40"
             >
               Judge로 전체 자동 평가
             </button>
@@ -1543,7 +1543,7 @@ function ReviewPanel({
               type="button"
               disabled={isRunning}
               onClick={onDelete}
-              className="rounded-lg px-3 py-2 text-xs text-[var(--error)] disabled:opacity-40"
+              className="rounded-lg px-3 py-2 text-[10px] text-[var(--error)] disabled:opacity-40"
             >
               실험 삭제
             </button>
@@ -1573,7 +1573,7 @@ function ReviewPanel({
               <span className="font-mono text-[10px] text-[var(--ink-muted)]">
                 CASE {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="mt-1 block text-xs leading-5">
+              <span className="mt-1 block text-[10px] leading-5">
                 {result.prompt.slice(0, 70)}
               </span>
             </button>
@@ -1587,7 +1587,7 @@ function ReviewPanel({
                 <span className="rounded-full bg-[var(--panel-muted)] px-2.5 py-1 text-[10px] uppercase tracking-[0.1em]">
                   {CATEGORY_LABELS[selectedResult.category]}
                 </span>
-                <p className="mt-3 text-sm leading-6">
+                <p className="mt-3 text-[10px] leading-6">
                   {selectedResult.prompt}
                 </p>
               </div>
@@ -1595,7 +1595,7 @@ function ReviewPanel({
                 type="button"
                 disabled={isJudging}
                 onClick={onJudge}
-                className="shrink-0 rounded-lg border border-[var(--accent)]/30 px-3 py-2 text-xs text-[var(--accent)] disabled:opacity-40"
+                className="shrink-0 rounded-lg border border-[var(--accent)]/30 px-3 py-2 text-[10px] text-[var(--accent)] disabled:opacity-40"
               >
                 {isJudging ? "자동 평가 중..." : "Judge 자동 평가 (선택)"}
               </button>
@@ -1614,7 +1614,7 @@ function ReviewPanel({
                 >
                   <header className="flex items-center justify-between border-b border-[var(--line)] bg-[var(--panel-muted)]/60 px-4 py-3">
                     <div>
-                      <span className="font-mono text-sm font-bold">
+                      <span className="font-mono text-[10px] font-bold">
                         RESPONSE {label}
                       </span>
                       {isRevealed ? (
@@ -1627,7 +1627,7 @@ function ReviewPanel({
                       {run.metrics?.tokensPerSecond?.toFixed(1) ?? "--"} tok/s
                     </span>
                   </header>
-                  <div className="max-h-96 overflow-y-auto p-4 text-sm leading-7 whitespace-pre-wrap">
+                  <div className="max-h-96 overflow-y-auto p-4 text-[10px] leading-7 whitespace-pre-wrap">
                     {run.content ||
                       run.error ||
                       (run.status === "running"
@@ -1660,7 +1660,7 @@ function ReviewPanel({
                                   },
                                 }))
                               }
-                              className="mt-1 h-8 w-full rounded-lg border border-[var(--line)] bg-white px-2 text-xs"
+                              className="mt-1 h-8 w-full rounded-lg border border-[var(--line)] bg-white px-2 text-[10px]"
                             >
                               <option value="">Score</option>
                               {[1, 2, 3, 4, 5].map((score) => (
@@ -1681,7 +1681,7 @@ function ReviewPanel({
                             winnerRunId: run.id,
                           }))
                         }
-                        className={`mt-3 h-9 w-full rounded-lg border text-xs font-semibold ${
+                        className={`mt-3 h-9 w-full rounded-lg border text-[10px] font-semibold ${
                           evaluation?.winnerRunId === run.id
                             ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
                             : "border-[var(--line)]"
@@ -1710,10 +1710,10 @@ function ReviewPanel({
               }
               rows={2}
               placeholder="평가 메모 (선택 사항)"
-              className="w-full rounded-xl border border-[var(--line)] px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[var(--line)] px-3 py-2 text-[10px]"
             />
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs text-[var(--ink-muted)]">
+              <p className="text-[10px] text-[var(--ink-muted)]">
                 {isRevealed
                   ? "Review complete. Model identities revealed."
                   : "평가 완료 전까지 모델명은 숨겨집니다."}
@@ -1728,7 +1728,7 @@ function ReviewPanel({
                       completedAt: new Date().toISOString(),
                     }))
                   }
-                  className="rounded-lg bg-[var(--ink)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-35"
+                  className="rounded-lg bg-[var(--ink)] px-4 py-2 text-[10px] font-semibold text-white disabled:opacity-35"
                 >
                   평가 완료하고 모델명 확인
                 </button>
@@ -1738,15 +1738,15 @@ function ReviewPanel({
 
           {selectedResult.judgeEvaluation ? (
             <div className="mt-4 rounded-2xl border border-[var(--accent)]/20 bg-[var(--accent-soft)] p-4">
-              <p className="text-xs font-semibold text-[var(--accent)]">
+              <p className="text-[10px] font-semibold text-[var(--accent)]">
                 자동 평가 모델: {selectedResult.judgeEvaluation.judgeModel}
               </p>
-              <p className="mt-1 text-sm">
+              <p className="mt-1 text-[10px]">
                 추천 모델: {selectedResult.judgeEvaluation.winnerModel} ·
                 신뢰도{" "}
                 {selectedResult.judgeEvaluation.confidence.toFixed(2)}
               </p>
-              <p className="mt-2 text-xs leading-5 text-[var(--ink-secondary)]">
+              <p className="mt-2 text-[10px] leading-5 text-[var(--ink-secondary)]">
                 {selectedResult.judgeEvaluation.rationale}
               </p>
             </div>
@@ -1774,7 +1774,7 @@ function ResultsPanel({
 }: ResultsPanelProps) {
   if (!selectedExperiment) {
     return (
-      <div className="rounded-2xl border border-[var(--line)] bg-white p-10 text-center text-sm text-[var(--ink-muted)]">
+      <div className="rounded-2xl border border-[var(--line)] bg-white p-10 text-center text-[10px] text-[var(--ink-muted)]">
         No benchmark results yet.
       </div>
     );
@@ -1789,15 +1789,15 @@ function ResultsPanel({
     <div className="space-y-5">
       <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm">
         <div>
-          <h3 className="font-semibold">Benchmark report</h3>
-          <p className="mt-1 text-xs text-[var(--ink-muted)]">
+          <h3 className="text-[12px] font-semibold">Benchmark report</h3>
+          <p className="mt-1 text-[10px] text-[var(--ink-muted)]">
             Quality, blind wins, speed, and reliability in one view.
           </p>
         </div>
         <select
           value={selectedExperimentId}
           onChange={(event) => onExperimentChange(event.target.value)}
-          className="max-w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
+          className="max-w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[10px]"
         >
           {experiments.map((experiment) => (
             <option key={experiment.id} value={experiment.id}>
@@ -1852,9 +1852,9 @@ function ResultsPanel({
               {stats.map((stat) => (
                 <tr
                   key={stat.model}
-                  className="border-t border-[var(--line)] text-sm"
+                  className="border-t border-[var(--line)] text-[10px]"
                 >
-                  <td className="px-4 py-4 font-mono text-xs">
+                  <td className="px-4 py-4 font-mono text-[10px]">
                     {stat.model}
                   </td>
                   <td className="px-4 py-4">
@@ -1883,8 +1883,8 @@ function ResultsPanel({
       </section>
 
       <section className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm">
-        <h3 className="font-semibold">Quality / speed profile</h3>
-        <p className="mt-1 text-xs text-[var(--ink-muted)]">
+        <h3 className="text-[12px] font-semibold">Quality / speed profile</h3>
+        <p className="mt-1 text-[10px] text-[var(--ink-muted)]">
           Longer bars are faster. Quality uses human scores first, then Judge
           scores.
         </p>
@@ -1899,7 +1899,7 @@ function ResultsPanel({
                 key={stat.model}
                 className="grid gap-2 sm:grid-cols-[220px_minmax(0,1fr)_80px]"
               >
-                <span className="truncate font-mono text-xs">
+                <span className="truncate font-mono text-[10px]">
                   {stat.model}
                 </span>
                 <div className="relative h-7 overflow-hidden rounded-lg bg-[var(--panel-muted)]">
@@ -1911,7 +1911,7 @@ function ResultsPanel({
                     {stat.tokensPerSecond?.toFixed(1) ?? "--"} tok/s
                   </span>
                 </div>
-                <span className="text-right font-mono text-xs">
+                <span className="text-right font-mono text-[10px]">
                   Q {quality ? quality.toFixed(2) : "--"}
                 </span>
               </div>
@@ -1935,7 +1935,7 @@ function SummaryCard({
       <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--ink-muted)]">
         {label}
       </p>
-      <p className="mt-2 font-mono text-2xl font-semibold">{value}</p>
+      <p className="mt-2 font-mono text-xl font-semibold">{value}</p>
     </div>
   );
 }
